@@ -11,6 +11,9 @@
 - `npm run build`: run before shipping to catch compile issues.
 - `npm run start`: serve the production build locally.
 - `npm run lint`: enforce lint rules and resolve warnings before merging.
+- `npm run supabase:start`: boot the local Supabase stack (Postgres, Auth, Studio, Storage).
+- `npm run supabase:stop`: stop the local Supabase containers when you're done.
+- `npm run supabase:types`: regenerate TypeScript definitions from the local database schema.
 
 ## Coding Style & Naming Conventions
 - Write components and utilities in TypeScript with strict typing and functional React components.

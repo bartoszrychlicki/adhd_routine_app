@@ -1,0 +1,2 @@
+-- Seed data for local development.
+-- Add INSERT statements here to populate the database after migrations run.

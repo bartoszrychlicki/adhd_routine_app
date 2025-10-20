@@ -1,4 +1,4 @@
-import type { Enums, Json, Tables, TablesInsert, TablesUpdate } from "./db/database.types"
+import type { Enums, Tables, TablesInsert, TablesUpdate } from "./db/database.types"
 
 export type Uuid = string
 export type IsoDateTimeString = string

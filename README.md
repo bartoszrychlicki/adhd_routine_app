@@ -29,8 +29,16 @@ Eryk’s Routine Journal is a mobile-first web app that gamifies daily chores fo
    # or
    pnpm install
    ```
-3. **Configure environment:** Create a `.env.local` with Supabase credentials (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) and optional `OPENROUTER_API_KEY` when enabling AI helpers.
-4. **Run the dev server:**
+3. **Configure environment:** Duplicate `.env.example` to `.env.local` and adjust values as needed. The defaults match the local Supabase stack (`http://127.0.0.1:54321`) and include the publishable and service role keys emitted by `supabase start`. Add optional secrets (e.g. `OPENROUTER_API_KEY`) when you enable those integrations.
+4. **Run Supabase locally:** Start the containers and apply migrations. The command is idempotent and can stay running in the background.
+   ```bash
+   npm run supabase:start
+   ```
+   After Supabase finishes booting, refresh the generated database types whenever migrations change:
+   ```bash
+   npm run supabase:types
+   ```
+5. **Run the dev server:**
    ```bash
    npm run dev
    ```
@@ -41,6 +49,9 @@ Eryk’s Routine Journal is a mobile-first web app that gamifies daily chores fo
 - `npm run build` – Produces an optimized production build.
 - `npm run start` – Starts the production server after a build.
 - `npm run lint` – Runs ESLint with the Next.js ruleset; resolve warnings before opening a PR.
+- `npm run supabase:start` – Boots the local Supabase stack (Postgres, Studio, Auth, Storage).
+- `npm run supabase:stop` – Stops the local Supabase containers when you are done working.
+- `npm run supabase:types` – Regenerates TypeScript definitions from the local database schema.
 
 ## 5. Project Scope
 - **In scope for MVP:** Parent onboarding, CRUD for routines/tasks/rewards, dashboard with daily progress and history, child routine flow with highlighted tasks, irreversible timer, scoring system, achievements, and reward redemption experience.
