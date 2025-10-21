@@ -505,3 +505,175 @@
 4. Zaimplementuj handler POST, weryfikujący rolę i kontekst rodziny.
 5. Dodaj logging (audit) i mapowanie błędów.
 6. Zaktualizuj dokumentację OpenAPI + scenariusze testowe (skip przez rodzica, odmowa dziecku, ponowny skip).
+
+# API Endpoint Implementation Plan: GET /profiles/me
+
+## 1. Przegląd punktu końcowego
+- Zwraca szczegóły profilu zalogowanego użytkownika (rodzica lub dziecka).
+- Wspiera UI do konfiguracji konta i personalizacji doświadczenia.
+- Bazuje na danych z tabeli `profiles` z uwzględnieniem locków PIN.
+
+## 2. Szczegóły żądania
+- Metoda HTTP: `GET`.
+- Struktura URL: `/api/v1/profiles/me` (`src/app/api/v1/profiles/me/route.ts`).
+- Parametry: brak (profil identyfikowany przez kontekst uwierzytelnienia).
+- Nagłówki: `Authorization: Bearer <Supabase JWT>` (mock – `x-debug-profile-id`, `x-debug-role`).
+
+## 3. Szczegóły odpowiedzi
+- Status sukcesu: `200 OK`.
+- Struktura (`ProfileSelfDto`):
+  ```json
+  {
+    "id": "uuid",
+    "familyId": "uuid",
+    "role": "parent",
+    "displayName": "string",
+    "email": "string",
+    "avatarUrl": "string",
+    "settings": {},
+    "lastLoginAt": "ISO-8601",
+    "createdAt": "ISO-8601",
+    "pinLock": {
+      "failedAttempts": 0,
+      "lockExpiresAt": "ISO-8601"
+    }
+  }
+  ```
+- Jeśli profil nie istnieje → `404 Not Found`.
+
+## 4. Przepływ danych
+- Handler pobiera kontekst (mockowany) i Supabase client z RLS.
+- Wywołuje `profiles` select po `id`, `deleted_at IS NULL`.
+- Mapuje wynik do DTO (transformuje nazwy pól snake_case → camelCase, w tym `pin_lock`).
+- Zwraca wynik; brak cache (dane użytkownika).
+
+## 5. Względy bezpieczeństwa
+- Waliduj obecność `profileId` w kontekście; brak → `401`.
+- Upewnij się, że `deleted_at` jest `NULL`.
+- Nie ujawniaj danych wrażliwych (PIN hash).
+- Mockowane nagłówki powinny być wyłączone w produkcji (TODO).
+
+## 6. Obsługa błędów
+- `401 Unauthorized`: brak kontekstu.
+- `404 Not Found`: profil nie odnaleziony.
+- `500 Internal Server Error`: błąd Supabase; loguj kontekst.
+
+## 7. Rozważania dotyczące wydajności
+- Zapytanie single-row po PK (indeks).
+- Ewentualne cache po stronie klienta; serwer bez cache.
+
+## 8. Etapy wdrożenia
+1. Utwórz helper `getAuthContext(req)` zwracający `profileId`, `familyId`, `role`.
+2. Zaimplementuj `getProfileById` w serwisie `profilesService`.
+3. Dodaj handler GET mapujący wynik do DTO i obsługujący błędy.
+4. Zaktualizuj dokumentację i scenariusze testowe (profil istnieje / brak / brak auth).
+
+# API Endpoint Implementation Plan: GET /families/current
+
+## 1. Przegląd punktu końcowego
+- Zwraca dane rodziny przypisanej do zalogowanego profilu.
+- Służy jako źródło konfiguracji globalnej (nazwa, timezone, ustawienia onboarding).
+
+## 2. Szczegóły żądania
+- Metoda HTTP: `GET`.
+- Struktura URL: `/api/v1/families/current` (`src/app/api/v1/families/current/route.ts`).
+- Parametry: brak (wykorzystuje `familyId` z kontekstu).
+- Nagłówki: `Authorization` (mock nagłówki debug).
+
+## 3. Szczegóły odpowiedzi
+- Status sukcesu: `200 OK`.
+- Struktura (`FamilyDto`):
+  ```json
+  {
+    "id": "uuid",
+    "familyName": "string",
+    "timezone": "Europe/Warsaw",
+    "settings": {},
+    "createdAt": "ISO-8601",
+    "updatedAt": "ISO-8601"
+  }
+  ```
+- Gdy rodzina nie istnieje → `404 Not Found`.
+
+## 4. Przepływ danych
+- Handler pobiera kontekst, weryfikuje `familyId`.
+- Serwis `familiesService.getById` czyta rekord (z `deleted_at IS NULL`).
+- Mapowanie do DTO (camelCase).
+- Dodanie nagłówków `Cache-Control: private, max-age=30`.
+
+## 5. Względy bezpieczeństwa
+- `familyId` z kontekstu; brak → `404` lub `401`.
+- Korzystaj z RLS Supabase; brak service role.
+
+## 6. Obsługa błędów
+- `401 Unauthorized`: brak kontekstu.
+- `404 Not Found`: rodzina nie istnieje.
+- `500 Internal Server Error`: błąd zapytania; loguj `familyId`.
+
+## 7. Rozważania dotyczące wydajności
+- Zapytanie po PK, szybkie; można dodać `ETag` (hash `updatedAt`).
+- Krótki cache prywatny.
+
+## 8. Etapy wdrożenia
+1. Dodaj serwis `familiesService.getById`.
+2. Zaimplementuj handler GET z mapowaniem DTO.
+3. Dodaj obsługę `ETag` (opcjonalnie) i nagłówki cache.
+4. Zaktualizuj dokumentację/testy (sukces, brak rodziny, brak auth).
+
+# API Endpoint Implementation Plan: PATCH /families/{familyId}
+
+## 1. Przegląd punktu końcowego
+- Aktualizuje dane rodziny (nazwa, timezone, ustawienia onboarding).
+- Stosuje walidację IANA timezone i soft-delete constraints.
+- Pozwala rodzicowi/adminowi dostosować konfigurację globalną.
+
+## 2. Szczegóły żądania
+- Metoda HTTP: `PATCH`.
+- Struktura URL: `/api/v1/families/{familyId}` (`src/app/api/v1/families/[familyId]/route.ts`).
+- Parametry ścieżki: `familyId` (UUID, wymagany – musi równać się kontekstowemu `familyId`).
+- Request body (`FamilyUpdateCommand`):
+  ```json
+  {
+    "familyName": "string",
+    "timezone": "Europe/Warsaw",
+    "settings": { "onboarding": { "completedSteps": [] } }
+  }
+  ```
+- Nagłówki: `Authorization`, opcjonalnie `If-Match` z `updatedAt` (do rozważenia).
+
+## 3. Szczegóły odpowiedzi
+- Status sukcesu: `200 OK`.
+- Struktura (`FamilyDto` – po aktualizacji).
+- W przypadku braku zmian – nadal `200` z aktualnym stanem.
+
+## 4. Przepływ danych
+- Handler waliduje `familyId` (UUID) i porównuje z kontekstem.
+- Waliduje body (Zod: `familyName` min 1 znak, `timezone` zgodny z listą, `settings` jako JSON).
+- Serwis `familiesService.update` wykonuje update poprzez Supabase:
+  - Sprawdza istnienie (SELECT).
+  - Weryfikuje `updated_at` jeśli przesłano `If-Match` (opcjonalne). W MVP – pomijamy, ale notujemy TODO.
+  - Wykonuje `update` i zwraca zaktualizowany rekord.
+- Handler mapuje wynik do DTO i zwraca.
+
+## 5. Względy bezpieczeństwa
+- Tylko role `parent`/`admin` – weryfikacja w kontekście (mock).
+- Zabroń aktualizacji innej rodziny (403).
+- Zapewnij, że `deleted_at IS NULL`.
+
+## 6. Obsługa błędów
+- `400 Bad Request`: walidacja danych (np. zły timezone).
+- `401 Unauthorized`: brak kontekstu.
+- `403 Forbidden`: `familyId` niezgodny lub rola nieuprawniona.
+- `404 Not Found`: rodzina nie istnieje.
+- `409 Conflict`: (opcjonalne) mismatch `If-Match`.
+- `500 Internal Server Error`: błędy Supabase; loguj.
+
+## 7. Rozważania dotyczące wydajności
+- Pojedynczy update; minimalne obciążenie.
+- Można rozważyć caching w przyszłości (inwalidacja po update).
+
+## 8. Etapy wdrożenia
+1. Stwórz schemat walidacji dla body (Zod + lista IANA – użyj biblioteki `@vvo/tzdb`? ewentualnie `Intl.supportedValuesOf` w runtime).
+2. Utwórz serwis `familiesService.update` (SELECT + UPDATE + mapowanie).
+3. Zaimplementuj handler PATCH z kontrolą roli i mapowaniem błędów.
+4. Dodaj testy manualne i dokumentację (sukces, zły timezone, brak uprawnień).

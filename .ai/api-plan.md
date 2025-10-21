@@ -27,6 +27,7 @@
 
 - **GET `/families/current`**
   - Description: Retrieve the authenticated parent/admin family record; uses Supabase JWT to resolve `family_id`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON:
@@ -52,6 +53,7 @@
 
 - **PATCH `/families/{familyId}`**
   - Description: Update family metadata (name, timezone, onboarding settings); RLS restricts to parent/admin owning the family.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -78,6 +80,7 @@
 
 - **GET `/profiles/me`**
   - Description: Return the caller’s profile (parent or child) including role, family linkage, and onboarding flags.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON:
@@ -108,6 +111,7 @@
 
 - **GET `/families/{familyId}/profiles`**
   - Description: List profiles within a family with role-based filtering; leveraged by parent dashboards.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `role` (`parent|child|admin`, optional)
     - `includeDeleted` (`boolean`, default `false`)
@@ -144,6 +148,7 @@
 
 - **POST `/families/{familyId}/profiles`**
   - Description: Create a child profile with optional PIN; parents/admins only.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -175,6 +180,7 @@
 
 - **PATCH `/profiles/{profileId}`**
   - Description: Update display name, avatar, settings, or soft-delete flag; parent can manage children, child can update self (limited fields).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -193,6 +199,7 @@
 
 - **POST `/profiles/{profileId}/pin`**
   - Description: Parent resets or child sets PIN; hashed server-side using Argon2.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -220,6 +227,7 @@
 
 - **POST `/profiles/{childId}/access-tokens`**
   - Description: Issue a new child access token; revokes previous active token due to partial unique index.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -245,6 +253,7 @@
 
 - **GET `/profiles/{childId}/access-tokens`**
   - Description: List active and historical child access tokens for auditing.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeInactive` (`boolean`, default `false`)
   - Request JSON: —
@@ -268,6 +277,7 @@
 
 - **POST `/child-access-tokens/{tokenId}/deactivate`**
   - Description: Soft-deactivate a token (sets `deactivated_at`, `deactivated_by_profile_id`).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON:
@@ -285,6 +295,7 @@
 
 - **GET `/families/{familyId}/routines`**
   - Description: List routines with filtering by type and active flag; leverages `routines_family_active_idx`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `routineType` (`morning|afternoon|evening|custom`, optional)
     - `isActive` (`boolean`, default `true`)
@@ -321,6 +332,7 @@
 
 - **POST `/families/{familyId}/routines`**
   - Description: Create a routine (parents/admin only); slug uniqueness enforced per family.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -342,6 +354,7 @@
 
 - **GET `/routines/{routineId}`**
   - Description: Fetch routine details with optional child assignments.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeChildren` (`boolean`, default `false`)
   - Request JSON: —
@@ -352,6 +365,7 @@
 
 - **PATCH `/routines/{routineId}`**
   - Description: Update routine metadata and activation status.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: Partial routine fields.
   - Response JSON: Updated routine.
@@ -362,6 +376,7 @@
 
 - **DELETE `/routines/{routineId}`**
   - Description: Soft delete routine (`deleted_at=now()`).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON:
@@ -378,6 +393,7 @@
 
 - **GET `/routines/{routineId}/children`**
   - Description: Retrieve children assigned to a routine in display order; supports toggling visibility.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeDisabled` (`boolean`, default `false`)
   - Request JSON: —
@@ -400,6 +416,7 @@
 
 - **PUT `/routines/{routineId}/children/{childId}`**
   - Description: Assign or update routine visibility for a child; upserts `child_routines`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -415,6 +432,7 @@
 
 - **PATCH `/routines/{routineId}/children/reorder`**
   - Description: Bulk reorder child positions to maintain contiguous ordering.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -441,6 +459,7 @@
 
 - **GET `/routines/{routineId}/children/{childId}/tasks`**
   - Description: List tasks for a child within a routine ordered by `position`; uses `routine_tasks_child_order_idx`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeInactive` (`boolean`, default `false`)
   - Request JSON: —
@@ -467,6 +486,7 @@
 
 - **POST `/routines/{routineId}/children/{childId}/tasks`**
   - Description: Create a task within the routine/child scope.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -487,6 +507,7 @@
 
 - **PATCH `/routine-tasks/{taskId}`**
   - Description: Update task metadata, optionally soft delete (`deletedAt`).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: Partial fields such as `name`, `points`, `isActive`, `deletedAt`.
   - Response JSON: Updated task.
@@ -496,6 +517,7 @@
 
 - **PATCH `/routine-tasks/reorder`**
   - Description: Bulk reorder tasks within a routine/child scope.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -519,6 +541,7 @@
 
 - **GET `/children/{childId}/sessions`**
   - Description: List sessions for a child with optional filters; uses `routine_sessions_child_date_idx`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `status` (`scheduled|in_progress|completed|auto_closed|skipped|expired`, optional)
     - `fromDate`, `toDate` (`YYYY-MM-DD`, optional)
@@ -553,6 +576,7 @@
 
 - **POST `/children/{childId}/sessions`**
   - Description: Create or start a session; transitions status to `in_progress`, sets `started_at`, `planned_end_at`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -583,6 +607,7 @@
 
 - **GET `/sessions/{sessionId}`**
   - Description: Retrieve full session details including task statuses and performance stats snapshot.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeTasks` (`boolean`, default `true`)
     - `includePerformance` (`boolean`, default `true`)
@@ -594,6 +619,7 @@
 
 - **POST `/sessions/{sessionId}/complete`**
   - Description: Finalize a session; calculates duration, applies bonus by comparing with `routine_performance_stats`, writes `point_transactions`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -624,6 +650,7 @@
 
 - **POST `/sessions/{sessionId}/skip`**
   - Description: Mark session as skipped or expired (parent action).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -647,6 +674,7 @@
 
 - **POST `/sessions/{sessionId}/tasks/{taskId}/complete`**
   - Description: Mark a task as completed in order sequence; updates `position` status and awards task points.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -669,6 +697,7 @@
 
 - **POST `/sessions/{sessionId}/tasks/{taskCompletionId}/undo`**
   - Description: Allow parent/admin to undo completion (sets `deleted_at` on completion and adjusts score).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON:
@@ -685,6 +714,7 @@
 
 - **GET `/children/{childId}/performance/routines`**
   - Description: Fetch per-routine stats including best duration and last completion; used for timer comparisons.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `routineId` (`uuid`, optional)
   - Request JSON: —
@@ -710,6 +740,7 @@
 
 - **GET `/families/{familyId}/points/transactions`**
   - Description: Paginated ledger with filters; uses `point_transactions_family_type_idx`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `childProfileId` (`uuid`, optional)
     - `transactionType` (`task_completion|routine_bonus|manual_adjustment|reward_redeem`, optional)
@@ -747,6 +778,7 @@
 
 - **POST `/families/{familyId}/points/transactions`**
   - Description: Manual point adjustment by parent/admin; writes `manual_adjustment` entries.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -797,6 +829,7 @@
 
 - **GET `/families/{familyId}/rewards`**
   - Description: List rewards with optional filters; uses `rewards_family_active_idx`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeDeleted` (`boolean`, default `false`)
     - `childProfileId` (`uuid`, optional) — includes visibility info.
@@ -827,6 +860,7 @@
 
 - **POST `/families/{familyId}/rewards`**
   - Description: Create reward.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -844,6 +878,7 @@
 
 - **GET `/rewards/{rewardId}`**
   - Description: Fetch reward with visibility schedule.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON: Reward object with `childVisibility`.
@@ -853,6 +888,7 @@
 
 - **PATCH `/rewards/{rewardId}`**
   - Description: Update reward metadata, activate/deactivate, or soft delete.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: Partial reward fields.
   - Response JSON: Updated reward.
@@ -862,6 +898,7 @@
 
 - **DELETE `/rewards/{rewardId}`**
   - Description: Soft delete reward.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON: —
   - Response JSON: `{ "message": "Reward archived" }`
   - Success: `200 OK`.
@@ -872,6 +909,7 @@
 
 - **GET `/rewards/{rewardId}/visibility`**
   - Description: List visibility windows for children.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON:
@@ -890,6 +928,7 @@
 
 - **PUT `/rewards/{rewardId}/visibility/{childId}`**
   - Description: Upsert visibility window.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON:
     ```json
     {
@@ -905,6 +944,7 @@
 
 - **DELETE `/rewards/{rewardId}/visibility/{childId}`**
   - Description: Remove visibility window (soft delete by setting `deletedAt`).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON: —
   - Response JSON: `{ "message": "Visibility removed" }`
   - Success: `200 OK`.
@@ -913,6 +953,7 @@
 
 - **POST `/rewards/{rewardId}/redeem`**
   - Description: Child initiates redemption; creates pending `reward_redemptions` and corresponding negative `point_transaction`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON:
     ```json
@@ -939,6 +980,7 @@
 
 - **GET `/children/{childId}/reward-redemptions`**
   - Description: List redemptions for child (child or parent).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `status` (`pending|approved|fulfilled|rejected|cancelled`, optional)
     - `page`, `pageSize`, `sort` (`requestedAt|status`), `order`
@@ -948,6 +990,7 @@
 
 - **PATCH `/reward-redemptions/{redemptionId}`**
   - Description: Parent/admin updates status (`approved`, `fulfilled`, `rejected`, `cancelled`) and attaches confirmation metadata.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON:
     ```json
     {
@@ -965,6 +1008,7 @@
 
 - **GET `/families/{familyId}/achievements`**
   - Description: List achievement catalog (global and family-specific).
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `isActive` (`boolean`, default `true`)
     - `page`, `pageSize`, `sort` (`name|createdAt`)
@@ -974,6 +1018,7 @@
 
 - **POST `/families/{familyId}/achievements`**
   - Description: Create achievement definition.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON:
     ```json
     {
@@ -991,12 +1036,14 @@
 
 - **PATCH `/achievements/{achievementId}`**
   - Description: Update metadata or soft delete.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON: Partial fields inc. `isActive`, `deletedAt`.
   - Response JSON: Updated achievement.
   - Success: `200 OK`.
 
 - **DELETE `/achievements/{achievementId}`**
   - Description: Soft delete by setting `deletedAt`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Response JSON: `{ "message": "Achievement archived" }`
   - Success: `200 OK`.
 
@@ -1004,6 +1051,7 @@
 
 - **GET `/children/{childId}/achievements`**
   - Description: List earned achievements with metadata for gallery view.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeCriteria` (`boolean`, default `false`)
   - Request JSON: —
@@ -1026,6 +1074,7 @@
 
 - **POST `/children/{childId}/achievements`**
   - Description: Parent/admin manually awards an achievement; ensures uniqueness per child.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON:
     ```json
     {
@@ -1042,6 +1091,7 @@
 
 - **GET `/families/{familyId}/progress`**
   - Description: Dashboard endpoint combining routines, sessions, and task statuses for a day.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `date` (`YYYY-MM-DD`, default today)
     - `includeHistory` (`boolean`, default `false`) — returns previous day summary when true.
@@ -1080,6 +1130,7 @@
 
 - **GET `/families/{familyId}/progress/history`**
   - Description: Paginated historical summaries leveraging `family_points_snapshots` + sessions.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `page`, `pageSize`, `fromDate`, `toDate`
   - Response JSON: Paginated list of daily summaries.
@@ -1089,6 +1140,7 @@
 
 - **GET `/children/{childId}/wallet`**
   - Description: Returns current balance, pending deductions, and recent transactions; uses `point_transactions_profile_created_idx`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters:
     - `includeTransactions` (`boolean`, default `true`)
     - `transactionsLimit` (number, default 5)
@@ -1122,6 +1174,7 @@
 
 - **GET `/onboarding/state`**
   - Description: Return combined onboarding status for current profile and family.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Query Parameters: None
   - Request JSON: —
   - Response JSON:
@@ -1141,6 +1194,7 @@
 
 - **POST `/onboarding/state`**
   - Description: Mark onboarding steps complete; writes to `profiles.settings` and `families.settings`.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Request JSON:
     ```json
     {
@@ -1156,11 +1210,13 @@
 
 - **GET `/health`**
   - Description: Lightweight status for uptime monitoring.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Response JSON: `{ "status": "ok", "timestamp": "ISO-8601" }`
   - Success: `200 OK`.
 
 - **GET `/version`**
   - Description: Returns API version metadata for clients.
+  - Implementation Status: ✅ Implemented in Next.js route handler.
   - Response JSON:
     ```json
     {
