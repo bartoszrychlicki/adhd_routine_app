@@ -52,6 +52,7 @@
 
 ### Onboarding Krok 2 – Rutyny i zadania
 - Ścieżka: `/onboarding/routines`
+- Status: ✅ Formularz konfiguracji rutyn z wyborem godzin i kopiowaniem zadań z szablonów
 - Główny cel: wybór ram czasowych rutyn i kopiowanie zadań z szablonów.
 - Kluczowe informacje: lista rutyn (poranna/popołudniowa/wieczorna), template zadań (nazwa, punkty), preview dzienny.
 - Kluczowe komponenty: time pickery, grid szablonów, wielokrotne checkboxy „Kopiuj do rutyny”, edycja inline punktów, podsumowanie.
