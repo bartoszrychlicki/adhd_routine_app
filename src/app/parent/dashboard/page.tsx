@@ -124,9 +124,16 @@ export default async function ParentDashboardPage() {
               {onboardingDone ? "Onboarding zakończony" : "Onboarding w toku"}
             </p>
           </div>
-          <div className="mt-auto">
+          <div className="mt-auto flex flex-col gap-2">
             <Button asChild variant="outline" className="w-full border-slate-800/60 bg-slate-900/60 text-white">
-              <Link href="/onboarding/routines">Przejdź do rutyn</Link>
+              <Link href={onboardingDone ? "/parent/rewards" : "/onboarding/rewards"}>
+                {onboardingDone ? "Zobacz nagrody" : "Skonfiguruj nagrody"}
+              </Link>
+            </Button>
+            <Button asChild className="w-full">
+              <Link href={onboardingDone ? "/parent/routines" : "/onboarding/routines"}>
+                {onboardingDone ? "Zarządzaj rutynami" : "Przejdź do kreatora rutyn"}
+              </Link>
             </Button>
           </div>
         </div>

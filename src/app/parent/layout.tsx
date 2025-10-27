@@ -7,6 +7,7 @@ import { NetworkStatusBanner } from "@/components/network-status-banner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getActiveProfile } from "@/lib/auth/get-active-profile"
+import { createSupabaseServerClient } from "@/lib/supabase"
 
 type ParentLayoutProps = {
   children: ReactNode
@@ -21,6 +22,20 @@ export default async function ParentLayout({ children }: ParentLayoutProps) {
 
   if (activeProfile.role === "child") {
     redirect("/child/home")
+  }
+
+  let onboardingComplete = false
+
+  if (activeProfile.familyId) {
+    const supabase = await createSupabaseServerClient()
+    const { data: familySettings } = await supabase
+      .from("families")
+      .select("settings")
+      .eq("id", activeProfile.familyId)
+      .maybeSingle()
+
+    const settings = (familySettings?.settings as { onboarding?: { isComplete?: boolean } } | null) ?? null
+    onboardingComplete = settings?.onboarding?.isComplete === true
   }
 
   return (
@@ -39,6 +54,26 @@ export default async function ParentLayout({ children }: ParentLayoutProps) {
             Tryb rodzica
           </Badge>
         </div>
+        <nav className="hidden items-center gap-4 text-sm text-slate-200/80 sm:flex">
+          <Link className="hover:text-white" href="/parent/dashboard">
+            Dashboard
+          </Link>
+          <Link className="hover:text-white" href="/parent/routines">
+            Rutyny
+          </Link>
+          <Link className="hover:text-white" href="/parent/rewards">
+            Nagrody
+          </Link>
+          <Link className="hover:text-white" href="/parent/children">
+            Profile dzieci
+          </Link>
+          <Link className="hover:text-white" href="/parent/settings">
+            Ustawienia
+          </Link>
+          <Link className="hover:text-white" href="/error">
+            Status systemu
+          </Link>
+        </nav>
         <div className="flex items-center gap-2 text-sm text-slate-200/90">
           <Sparkles className="size-4 text-teal-200" aria-hidden />
           <span>{activeProfile.displayName}</span>
@@ -61,14 +96,16 @@ export default async function ParentLayout({ children }: ParentLayoutProps) {
                 Monitoruj postępy rutyn, zarządzaj zadaniami i nagrodami dla swoich dzieci.
               </p>
             </div>
-            <div className="flex gap-3">
-              <Button variant="outline" className="border-slate-800/60 bg-slate-950/50" asChild>
-                <Link href="/onboarding/family">
-                  <Settings className="mr-2 size-4" aria-hidden />
-                  Onboarding
-                </Link>
-              </Button>
-            </div>
+            {!onboardingComplete ? (
+              <div className="flex gap-3">
+                <Button variant="outline" className="border-slate-800/60 bg-slate-950/50" asChild>
+                  <Link href="/onboarding/family">
+                    <Settings className="mr-2 size-4" aria-hidden />
+                    Onboarding
+                  </Link>
+                </Button>
+              </div>
+            ) : null}
           </div>
         </section>
 
