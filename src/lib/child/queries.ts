@@ -55,6 +55,8 @@ type RoutineSessionRow = {
   created_at: string
 }
 
+type RoutineSessionInsert = Database["public"]["Tables"]["routine_sessions"]["Insert"]
+
 type RoutineTaskDetailRow = {
   id: string
   name: string
@@ -70,6 +72,12 @@ type RoutineRow = {
   name: string
   start_time: string | null
   end_time: string | null
+}
+
+type ProfileWithFamilyRow = {
+  families: {
+    timezone: string | null
+  } | null
 }
 
 type RewardRow = {
@@ -97,6 +105,55 @@ function combineDateAndTime(date: string, time: string | null): string | null {
     return null
   }
   return `${date}T${time}`
+}
+
+const DEFAULT_FAMILY_TIMEZONE = "Europe/Warsaw"
+
+function formatDateInTimezone(date: Date, timeZone: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date)
+
+    const year = parts.find((part) => part.type === "year")?.value
+    const month = parts.find((part) => part.type === "month")?.value
+    const day = parts.find((part) => part.type === "day")?.value
+
+    if (year && month && day) {
+      return `${year}-${month}-${day}`
+    }
+  } catch (error) {
+    console.warn("[child:formatDateInTimezone] Failed to format date", {
+      error,
+      timeZone,
+    })
+  }
+
+  return date.toISOString().slice(0, 10)
+}
+
+async function resolveChildTimezone(client: AppSupabaseClient, childProfileId: string): Promise<string> {
+  const { data, error } = await client
+    .from("profiles")
+    .select("families(timezone)")
+    .eq("id", childProfileId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const row = data as ProfileWithFamilyRow | null
+  const timezone = row?.families?.timezone
+
+  if (typeof timezone === "string" && timezone.length > 0) {
+    return timezone
+  }
+
+  return DEFAULT_FAMILY_TIMEZONE
 }
 
 function parseSettings(settings: Record<string, unknown> | null): {
@@ -132,16 +189,71 @@ function sortHistory(a: ChildRoutineHistoryItem, b: ChildRoutineHistoryItem): nu
   return b.completedAt.localeCompare(a.completedAt)
 }
 
+async function ensureRoutineSessionsForAssignments(
+  client: AppSupabaseClient,
+  childProfileId: string,
+  routineMap: Map<string, RoutineAssignmentRow["routine"]>,
+  todayDate: string
+): Promise<void> {
+  if (routineMap.size === 0) {
+    return
+  }
+
+  const routineIds = Array.from(routineMap.keys())
+
+  const { data: existingSessions, error: existingSessionsError } = await client
+    .from("routine_sessions")
+    .select("routine_id, session_date")
+    .eq("child_profile_id", childProfileId)
+    .gte("session_date", todayDate)
+    .in("routine_id", routineIds)
+
+  if (existingSessionsError) {
+    throw new Error(existingSessionsError.message)
+  }
+
+  const routinesWithUpcomingSession = new Set<string>()
+  ;(existingSessions ?? []).forEach((row) => {
+    if (routineMap.has(row.routine_id)) {
+      routinesWithUpcomingSession.add(row.routine_id)
+    }
+  })
+
+  const missingRoutineIds = routineIds.filter((id) => !routinesWithUpcomingSession.has(id))
+
+  if (missingRoutineIds.length === 0) {
+    return
+  }
+
+  const inserts: RoutineSessionInsert[] = missingRoutineIds.map((routineId) => {
+    const routine = routineMap.get(routineId)
+    return {
+      routine_id: routineId,
+      child_profile_id: childProfileId,
+      session_date: todayDate,
+      planned_end_at: combineDateAndTime(todayDate, routine?.end_time ?? null),
+      status: "scheduled",
+    }
+  })
+
+  const { error: insertError } = await client.from("routine_sessions").insert(inserts)
+  if (insertError) {
+    throw new Error(insertError.message)
+  }
+}
+
 export async function fetchChildRoutineBoard(
   client: AppSupabaseClient,
   childProfileId: string,
   options: { daysAhead?: number } = {}
 ): Promise<ChildRoutineBoardData> {
+  const timezone = await resolveChildTimezone(client, childProfileId)
   const today = new Date()
-  const todayDate = today.toISOString().slice(0, 10)
-  const limitDate = addDays(today, options.daysAhead ?? DEFAULT_BOARD_DAYS_AHEAD)
-    .toISOString()
-    .slice(0, 10)
+  const todayDate = formatDateInTimezone(today, timezone)
+  const limitDate = formatDateInTimezone(
+    addDays(today, options.daysAhead ?? DEFAULT_BOARD_DAYS_AHEAD),
+    timezone
+  )
 
   const { data: assignmentsData, error: assignmentsError } = await client
     .from("child_routines")
@@ -201,21 +313,53 @@ export async function fetchChildRoutineBoard(
     taskTotals.set(typed.routine_id, current + (typed.points ?? 0))
   })
 
-  const { data: sessionData, error: sessionsError } = await client
-    .from("routine_sessions")
-    .select("id, routine_id, session_date, status, started_at, planned_end_at, completed_at, points_awarded, created_at")
-    .eq("child_profile_id", childProfileId)
-    .gte("session_date", todayDate)
-    .lte("session_date", limitDate)
+  async function loadSessions(): Promise<RoutineSessionRow[]> {
+    const { data, error } = await client
+      .from("routine_sessions")
+      .select("id, routine_id, session_date, status, started_at, planned_end_at, completed_at, points_awarded, created_at")
+      .eq("child_profile_id", childProfileId)
+      .gte("session_date", todayDate)
+      .lte("session_date", limitDate)
 
-  if (sessionsError) {
-    throw new Error(sessionsError.message)
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return (data ?? []) as RoutineSessionRow[]
+  }
+
+  let sessionData = await loadSessions()
+
+  const hasAssignments = routineMap.size > 0
+  if (hasAssignments) {
+    const routinesRepresented = new Set<string>()
+    sessionData.forEach((session) => {
+      if (routineMap.has(session.routine_id)) {
+        routinesRepresented.add(session.routine_id)
+      }
+    })
+
+    if (routinesRepresented.size < routineMap.size) {
+      await ensureRoutineSessionsForAssignments(client, childProfileId, routineMap, todayDate)
+      sessionData = await loadSessions()
+    }
   }
 
   const board: ChildRoutineBoardData = { today: [], upcoming: [], completed: [] }
 
+  const activeStatuses = new Set<Database["public"]["Enums"]["routine_session_status"]>([
+    "scheduled",
+    "in_progress",
+  ])
+
+  const completedStatuses = new Set<Database["public"]["Enums"]["routine_session_status"]>([
+    "completed",
+    "auto_closed",
+    "expired",
+    "skipped",
+  ])
+
   ;(sessionData ?? [])
-    .map((row) => row as RoutineSessionRow)
     .filter((session) => routineMap.has(session.routine_id))
     .sort((a, b) => {
       const byDate = a.session_date.localeCompare(b.session_date)
@@ -243,15 +387,15 @@ export async function fetchChildRoutineBoard(
       }
 
       if (session.session_date === todayDate) {
-        if (session.status === "completed") {
+        if (completedStatuses.has(session.status)) {
           preview.status = "completed"
           board.completed.push(preview)
-        } else if (session.status === "scheduled" || session.status === "in_progress") {
+        } else if (activeStatuses.has(session.status)) {
           preview.status = "today"
           board.today.push(preview)
         }
       } else if (session.session_date > todayDate) {
-        if (session.status === "completed") {
+        if (completedStatuses.has(session.status)) {
           preview.status = "completed"
           board.completed.push(preview)
         } else {
