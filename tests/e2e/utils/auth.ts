@@ -8,6 +8,13 @@ type RawSameSite =
     ? T
     : never
 
+type ChildSessionInput = {
+  childId: string
+  familyId: string
+  displayName: string
+  durationMinutes?: number
+}
+
 function normalizeSameSite(value: RawSameSite | undefined): SameSiteAttribute | undefined {
   if (typeof value === "string") {
     const normalized = value.toLowerCase()
@@ -27,7 +34,8 @@ function normalizeSameSite(value: RawSameSite | undefined): SameSiteAttribute | 
 export async function applySupabaseSessionCookies(
   page: Page,
   cookies: SupabaseSessionCookie[],
-  baseUrl: string
+  baseUrl: string,
+  childSession?: ChildSessionInput
 ): Promise<void> {
   const url = new URL(baseUrl)
   const domain = url.hostname
@@ -50,6 +58,26 @@ export async function applySupabaseSessionCookies(
       expires: typeof maxAge === "number" ? now + maxAge : undefined,
     }
   })
+
+  if (childSession) {
+    const durationMinutes = childSession.durationMinutes ?? 120
+    const expiresAt = new Date(Date.now() + durationMinutes * 60_000)
+    playwrightCookies.push({
+      name: "child_session",
+      value: JSON.stringify({
+        childId: childSession.childId,
+        familyId: childSession.familyId,
+        displayName: childSession.displayName,
+        expiresAt: expiresAt.toISOString(),
+      }),
+      domain,
+      path: "/",
+      httpOnly: true,
+      secure: secureDefault,
+      sameSite: "Lax",
+      expires: Math.floor(expiresAt.getTime() / 1000),
+    })
+  }
 
   await page.context().addCookies(playwrightCookies)
 }

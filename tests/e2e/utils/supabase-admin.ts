@@ -5,6 +5,8 @@ import type { Database } from "../../../supabase/types/database.types"
 
 export type SupabaseAdminClient = ReturnType<typeof createClient<Database>>
 
+type RoutineSessionStatus = Database["public"]["Enums"]["routine_session_status"]
+
 type CreateParentOptions = {
   email?: string
   password?: string
@@ -683,5 +685,59 @@ export async function seedChildViewData(
       name: achievementData.name,
     },
     streakDays: 5,
+  }
+}
+
+export async function updateRoutineWindow(
+  sessionId: string,
+  params: {
+    startTime: string
+    endTime: string
+    status?: RoutineSessionStatus
+  }
+): Promise<void> {
+  const client = createAdminClient()
+
+  const { data: sessionRow, error: sessionError } = await client
+    .from("routine_sessions")
+    .select("id, routine_id, session_date")
+    .eq("id", sessionId)
+    .maybeSingle()
+
+  if (sessionError) {
+    throw sessionError
+  }
+
+  if (!sessionRow) {
+    throw new Error(`Routine session ${sessionId} not found`)
+  }
+
+  const { error: routineUpdateError } = await client
+    .from("routines")
+    .update({
+      start_time: params.startTime,
+      end_time: params.endTime,
+    })
+    .eq("id", sessionRow.routine_id)
+
+  if (routineUpdateError) {
+    throw routineUpdateError
+  }
+
+  const plannedEndAt = `${sessionRow.session_date}T${params.endTime}`
+
+  const { error: sessionUpdateError } = await client
+    .from("routine_sessions")
+    .update({
+      planned_end_at: plannedEndAt,
+      status: params.status ?? "scheduled",
+      started_at: null,
+      completed_at: null,
+      auto_closed_at: null,
+    })
+    .eq("id", sessionId)
+
+  if (sessionUpdateError) {
+    throw sessionUpdateError
   }
 }

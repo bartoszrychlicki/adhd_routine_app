@@ -8,9 +8,14 @@ test.describe("Authenticated child experience", () => {
     page,
     childSessionCookies,
     childSeedData,
+    childAccountAuth,
   }, testInfo) => {
     const baseURL = testInfo.project.use?.baseURL ?? BASE_URL_FALLBACK
-    await applySupabaseSessionCookies(page, childSessionCookies, baseURL)
+    await applySupabaseSessionCookies(page, childSessionCookies, baseURL, {
+      childId: childAccountAuth.profileId,
+      familyId: childAccountAuth.familyId,
+      displayName: childAccountAuth.displayName,
+    })
 
     await page.goto("/child/home")
 
@@ -25,9 +30,14 @@ test.describe("Authenticated child experience", () => {
     page,
     childSessionCookies,
     childSeedData,
+    childAccountAuth,
   }, testInfo) => {
     const baseURL = testInfo.project.use?.baseURL ?? BASE_URL_FALLBACK
-    await applySupabaseSessionCookies(page, childSessionCookies, baseURL)
+    await applySupabaseSessionCookies(page, childSessionCookies, baseURL, {
+      childId: childAccountAuth.profileId,
+      familyId: childAccountAuth.familyId,
+      displayName: childAccountAuth.displayName,
+    })
 
     await page.goto("/child/routines")
 
@@ -57,9 +67,14 @@ test.describe("Authenticated child experience", () => {
     page,
     childSessionCookies,
     childSeedData,
+    childAccountAuth,
   }, testInfo) => {
     const baseURL = testInfo.project.use?.baseURL ?? BASE_URL_FALLBACK
-    await applySupabaseSessionCookies(page, childSessionCookies, baseURL)
+    await applySupabaseSessionCookies(page, childSessionCookies, baseURL, {
+      childId: childAccountAuth.profileId,
+      familyId: childAccountAuth.familyId,
+      displayName: childAccountAuth.displayName,
+    })
 
     await page.goto("/child/rewards")
 
@@ -76,9 +91,14 @@ test.describe("Authenticated child experience", () => {
     page,
     childSessionCookies,
     childSeedData,
+    childAccountAuth,
   }, testInfo) => {
     const baseURL = testInfo.project.use?.baseURL ?? BASE_URL_FALLBACK
-    await applySupabaseSessionCookies(page, childSessionCookies, baseURL)
+    await applySupabaseSessionCookies(page, childSessionCookies, baseURL, {
+      childId: childAccountAuth.profileId,
+      familyId: childAccountAuth.familyId,
+      displayName: childAccountAuth.displayName,
+    })
 
     await page.goto("/child/profile")
 
