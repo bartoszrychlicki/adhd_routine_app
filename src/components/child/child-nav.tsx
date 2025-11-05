@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Gift, Home, Medal, Rows } from "lucide-react"
+import { Gift, Medal, Rows } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
@@ -16,16 +16,11 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    href: "/child/home",
-    label: "Start",
-    icon: <Home className="size-5" aria-hidden />,
-    isActive: (pathname) => pathname === "/child" || pathname.startsWith("/child/home"),
-  },
-  {
     href: "/child/routines",
     label: "Rutyny",
     icon: <Rows className="size-5" aria-hidden />,
-    isActive: (pathname) => pathname.startsWith("/child/routines"),
+    isActive: (pathname) =>
+      pathname === "/child" || pathname.startsWith("/child/home") || pathname.startsWith("/child/routines"),
   },
   {
     href: "/child/rewards",
