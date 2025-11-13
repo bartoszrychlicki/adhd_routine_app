@@ -140,6 +140,19 @@ export async function listChildAchievements(
   client: Client,
   childProfileId: string
 ): Promise<UserAchievementListResponseDto> {
+  type AchievementRowWithJoin = {
+    achievement_id: string
+    awarded_at: string
+    metadata: Record<string, unknown> | null
+    achievements: {
+      id: string
+      code: string
+      name: string
+      description: string | null
+      icon_url: string | null
+    }
+  }
+
   const { data, error } = await client
     .from("user_achievements")
     .select(
@@ -151,7 +164,9 @@ export async function listChildAchievements(
     throw mapSupabaseError(error)
   }
 
-  const achievements: UserAchievementDto[] = data.map((row) => ({
+  const rows: AchievementRowWithJoin[] = (data ?? []) as AchievementRowWithJoin[]
+
+  const achievements: UserAchievementDto[] = rows.map((row) => ({
     achievementId: row.achievement_id,
     code: row.achievements.code,
     name: row.achievements.name,
@@ -169,6 +184,18 @@ export async function awardAchievement(
   childProfileId: string,
   command: AwardAchievementCommand
 ): Promise<UserAchievementDto> {
+  type AwardedAchievementRow = {
+    achievement_id: string
+    awarded_at: string
+    metadata: Record<string, unknown> | null
+    achievements: {
+      code: string
+      name: string
+      description: string | null
+      icon_url: string | null
+    }
+  }
+
   const { data, error } = await client
     .from("user_achievements")
     .insert({
@@ -193,13 +220,15 @@ export async function awardAchievement(
     throw new ValidationError("Failed to award achievement")
   }
 
+  const row = data as AwardedAchievementRow
+
   return {
-    achievementId: data.achievement_id,
-    code: data.achievements.code,
-    name: data.achievements.name,
-    description: data.achievements.description,
-    iconUrl: data.achievements.icon_url,
-    awardedAt: data.awarded_at,
-    metadata: data.metadata
+    achievementId: row.achievement_id,
+    code: row.achievements.code,
+    name: row.achievements.name,
+    description: row.achievements.description,
+    iconUrl: row.achievements.icon_url,
+    awardedAt: row.awarded_at,
+    metadata: row.metadata
   }
 }
