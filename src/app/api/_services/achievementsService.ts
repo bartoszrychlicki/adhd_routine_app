@@ -164,7 +164,7 @@ export async function listChildAchievements(
     throw mapSupabaseError(error)
   }
 
-  const rows: AchievementRowWithJoin[] = (data ?? []) as AchievementRowWithJoin[]
+  const rows = (data ?? []) as unknown as AchievementRowWithJoin[]
 
   const achievements: UserAchievementDto[] = rows.map((row) => ({
     achievementId: row.achievement_id,
@@ -220,7 +220,7 @@ export async function awardAchievement(
     throw new ValidationError("Failed to award achievement")
   }
 
-  const row = data as AwardedAchievementRow
+  const row = data as unknown as AwardedAchievementRow
 
   return {
     achievementId: row.achievement_id,
