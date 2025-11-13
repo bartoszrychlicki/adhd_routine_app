@@ -1,4 +1,5 @@
 import type { Database } from "@/db/database.types"
+import type { Json } from "@/db/database.types"
 import type {
   AchievementDto,
   AchievementListResponseDto,
@@ -143,7 +144,7 @@ export async function listChildAchievements(
   type AchievementRowWithJoin = {
     achievement_id: string
     awarded_at: string
-    metadata: Record<string, unknown> | null
+    metadata: Json | null
     achievements: {
       id: string
       code: string
@@ -187,7 +188,7 @@ export async function awardAchievement(
   type AwardedAchievementRow = {
     achievement_id: string
     awarded_at: string
-    metadata: Record<string, unknown> | null
+    metadata: Json | null
     achievements: {
       code: string
       name: string
