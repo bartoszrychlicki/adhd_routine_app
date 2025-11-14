@@ -40,7 +40,7 @@ export async function GET(
     const offset = (query.page - 1) * query.pageSize
 
     const achievements = await listAchievements(supabase, {
-      familyIdValidated,
+      familyId: familyIdValidated,
       isActive: query.isActive,
       limit: query.pageSize,
       offset,

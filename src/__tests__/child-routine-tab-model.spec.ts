@@ -14,6 +14,7 @@ const baseSession = (overrides: Partial<ChildRoutineSessionViewModel>): ChildRou
   plannedEndAt: null,
   completedAt: null,
   durationSeconds: null,
+  bestTimeBeaten: false,
   totalPoints: 120,
   pointsAwarded: 0,
   steps: [

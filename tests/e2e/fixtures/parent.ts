@@ -18,6 +18,7 @@ export const test = base.extend<{
       const missing = getMissingSupabaseAdminEnv()
       if (missing.length > 0) {
         testInfo.skip(
+          true,
           `Pominięto scenariusz wymagający Supabase. Ustaw zmienne środowiskowe: ${missing.join(", ")}`
         )
       }

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getActiveProfile } from "@/lib/auth/get-active-profile"
 import { createSupabaseServerClient } from "@/lib/supabase"
+import { logoutParent } from "@/app/auth/parent/actions"
 
 type ParentLayoutProps = {
   children: ReactNode
@@ -77,12 +78,17 @@ export default async function ParentLayout({ children }: ParentLayoutProps) {
         <div className="flex items-center gap-2 text-sm text-slate-200/90">
           <Sparkles className="size-4 text-teal-200" aria-hidden />
           <span>{activeProfile.displayName}</span>
-          <Button variant="ghost" size="icon-sm" className="border border-slate-800/60 bg-slate-950/60" asChild>
-            <Link href="/auth/parent">
+          <form action={logoutParent}>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              type="submit"
+              className="border border-slate-800/60 bg-slate-950/60"
+            >
               <LogOut className="size-4" aria-hidden />
               <span className="sr-only">Wyloguj</span>
-            </Link>
-          </Button>
+            </Button>
+          </form>
         </div>
       </header>
 

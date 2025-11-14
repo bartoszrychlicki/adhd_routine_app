@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache"
 
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase"
 
-type RoutineTaskReorderState = {
+export type RoutineTaskReorderState = {
   status: "idle" | "success" | "error"
   message?: string
 }
 
-type RoutineTaskUpdateState = RoutineTaskReorderState
+export type RoutineTaskUpdateState = RoutineTaskReorderState
 
 async function getParentContext() {
   const supabase = await createSupabaseServerClient()

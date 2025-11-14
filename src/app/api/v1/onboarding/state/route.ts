@@ -4,6 +4,7 @@ import { requireAuthContext } from "../../../_lib/authContext"
 import { ForbiddenError, handleRouteError } from "../../../_lib/errors"
 import { readJsonBody } from "../../../_lib/request"
 import { updateOnboardingState, getOnboardingState } from "../../../_services/onboardingService"
+import type { OnboardingStateUpdateCommand } from "@/types"
 
 export async function GET(): Promise<Response> {
   try {
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       throw new ForbiddenError("Profile not associated with family")
     }
 
-    const payload = await readJsonBody(request)
+    const payload = (await readJsonBody(request)) as OnboardingStateUpdateCommand
     const state = await updateOnboardingState(
       supabase,
       authContext.profileId,

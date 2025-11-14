@@ -45,7 +45,7 @@ export async function GET(
     }
 
     const transactions = await listPointTransactions(supabase, {
-      familyIdValidated,
+      familyId: familyIdValidated,
       childProfileId: query.childProfileId,
       transactionType: query.transactionType,
       from: query.from ? `${query.from}T00:00:00Z` : undefined,

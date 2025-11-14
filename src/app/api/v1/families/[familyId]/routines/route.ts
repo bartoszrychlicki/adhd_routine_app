@@ -40,7 +40,7 @@ export async function GET(
     const query = parseRoutineListQuery(request.nextUrl.searchParams)
     const offset = (query.page - 1) * query.pageSize
     const routines = await listRoutines(supabase, {
-      familyIdValidated,
+      familyId: familyIdValidated,
       routineType: query.routineType,
       isActive: query.isActive,
       includeDeleted: query.includeDeleted,

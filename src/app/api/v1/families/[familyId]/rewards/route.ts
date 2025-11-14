@@ -45,7 +45,7 @@ export async function GET(
     }
 
     const rewards = await listRewards(supabase, {
-      familyIdValidated,
+      familyId: familyIdValidated,
       includeDeleted: query.includeDeleted,
       childProfileId: query.childProfileId,
       limit: query.pageSize,

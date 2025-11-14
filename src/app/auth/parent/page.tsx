@@ -7,13 +7,20 @@ import { ParentLoginForm } from "@/components/auth/parent-login-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getActiveProfile } from "@/lib/auth/get-active-profile"
 
+type ParentLoginPageProps = {
+  searchParams?: {
+    status?: string
+  }
+}
+
 export const metadata: Metadata = {
   title: "Logowanie rodzica",
   description: "Zaloguj się do panelu rodzica, aby zarządzać rutynami i nagrodami dziecka.",
 }
 
-export default async function ParentLoginPage() {
+export default async function ParentLoginPage({ searchParams }: ParentLoginPageProps) {
   const activeProfile = await getActiveProfile()
+  const logoutSuccess = searchParams?.status === "logged_out"
 
   if (activeProfile?.role === "parent" || activeProfile?.role === "admin") {
     redirect("/parent/dashboard")
@@ -59,7 +66,12 @@ export default async function ParentLoginPage() {
           </div>
         </div>
 
-        <div className="w-full max-w-md flex-1">
+        <div className="w-full max-w-md flex-1 space-y-4">
+          {logoutSuccess ? (
+            <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+              Pomyślnie wylogowano. Możesz zalogować się ponownie, aby wrócić do panelu rodzica.
+            </div>
+          ) : null}
           <ParentLoginForm />
         </div>
       </div>

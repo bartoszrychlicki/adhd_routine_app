@@ -26,8 +26,9 @@ function readStringField(value: FormDataEntryValue | null, field: string): strin
   return trimmed
 }
 
-function resolveOrigin(): string {
-  const origin = headers().get("origin")
+async function resolveOrigin(): Promise<string> {
+  const headerStore = await headers()
+  const origin = headerStore.get("origin")
   if (origin) {
     return origin
   }
@@ -63,7 +64,8 @@ export async function updateFamilyAction(
     const familyName = readStringField(formData.get("familyName"), "Nazwa rodziny")
     const timezone = readStringField(formData.get("timezone"), "Strefa czasowa")
 
-    const response = await performJsonRequest(`${resolveOrigin()}/api/v1/families/${familyId}`, {
+    const origin = await resolveOrigin()
+    const response = await performJsonRequest(`${origin}/api/v1/families/${familyId}`, {
       method: "PATCH",
       body: JSON.stringify({
         familyName,
@@ -141,7 +143,8 @@ export async function createChildProfileAction(
       }
     }
 
-    const response = await performJsonRequest(`${resolveOrigin()}/api/v1/families/${familyId}/profiles`, {
+    const origin = await resolveOrigin()
+    const response = await performJsonRequest(`${origin}/api/v1/families/${familyId}/profiles`, {
       method: "POST",
       body: JSON.stringify({
         displayName,

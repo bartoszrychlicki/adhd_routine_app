@@ -5,6 +5,8 @@ import { redirect } from "next/navigation"
 import { createSupabaseServiceRoleClient } from "@/lib/supabase"
 import { setChildSession } from "@/lib/auth/child-session"
 import { fetchChildRoutineBoard } from "@/lib/child/queries"
+import type { Database } from "@/db/database.types"
+import type { AppSupabaseClient } from "@/app/api/_lib/types"
 
 type LoginState =
   | { status: "idle" }
@@ -55,7 +57,12 @@ export async function loginChild(
 
   const supabase = createSupabaseServiceRoleClient()
 
-  const { data: childProfile, error } = await supabase
+  type ChildProfileRow = Pick<
+    Database["public"]["Tables"]["profiles"]["Row"],
+    "id" | "family_id" | "display_name" | "role" | "deleted_at" | "settings"
+  >
+
+  const { data: childProfileRaw, error } = await supabase
     .from("profiles")
     .select("id, family_id, display_name, role, deleted_at, settings")
     .eq("id", childId)
@@ -68,6 +75,8 @@ export async function loginChild(
       message: "Nie udało się zweryfikować profilu dziecka.",
     }
   }
+
+  const childProfile = (childProfileRaw as ChildProfileRow | null) ?? null
 
   if (!childProfile || childProfile.deleted_at || childProfile.role !== "child") {
     return {
@@ -86,7 +95,7 @@ export async function loginChild(
     }
   }
 
-  await fetchChildRoutineBoard(supabase, childProfile.id)
+  await fetchChildRoutineBoard(supabase as AppSupabaseClient, childProfile.id)
 
   await setChildSession({
     childId: childProfile.id,

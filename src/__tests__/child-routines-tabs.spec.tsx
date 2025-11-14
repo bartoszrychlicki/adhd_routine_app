@@ -24,8 +24,7 @@ beforeEach(() => {
   refreshMock.mockReset()
   fetchMock.mockReset()
   fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) })
-  // @ts-expect-error: Assign test double for fetch in Vitest environment
-  global.fetch = fetchMock
+  global.fetch = fetchMock as unknown as typeof fetch
 })
 
 const buildTasks = (tasks: Array<Partial<RoutineTab["tasks"][number]> & { id: string; title: string }>) =>

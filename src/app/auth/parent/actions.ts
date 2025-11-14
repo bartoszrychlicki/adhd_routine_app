@@ -4,6 +4,8 @@ import { AuthApiError, type User } from "@supabase/supabase-js"
 import { redirect } from "next/navigation"
 
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase"
+import type { Database } from "@/db/database.types"
+import { getAppBaseUrl } from "@/lib/env"
 
 type LoginState =
   | { status: "idle" }
@@ -36,11 +38,8 @@ function validatePassword(value: FormDataEntryValue | null): string | null {
 }
 
 function resolveEmailRedirect(): string | undefined {
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "http://localhost:3000"
-
   try {
-    const url = new URL(appUrl)
+    const url = new URL(getAppBaseUrl())
     url.pathname = "/auth/parent/confirm"
     return url.toString()
   } catch {
@@ -60,7 +59,9 @@ async function ensureParentProfile(user: User | null) {
 
   const serviceClient = createSupabaseServiceRoleClient()
 
-  const { data: existingProfile, error: fetchError } = await serviceClient
+  type ParentProfileRow = Pick<Database["public"]["Tables"]["profiles"]["Row"], "id" | "family_id">
+
+  const { data: existingProfileRaw, error: fetchError } = await serviceClient
     .from("profiles")
     .select("id, family_id")
     .eq("auth_user_id", user.id)
@@ -70,6 +71,8 @@ async function ensureParentProfile(user: User | null) {
     console.error("[ensureParentProfile] Failed to check existing profile", fetchError)
     return
   }
+
+  const existingProfile = (existingProfileRaw as ParentProfileRow | null) ?? null
 
   if (existingProfile?.family_id) {
     return
@@ -83,7 +86,7 @@ async function ensureParentProfile(user: User | null) {
   let familyId = existingProfile?.family_id ?? null
 
   if (!familyId) {
-    const { data: newFamily, error: familyError } = await serviceClient
+    const { data: newFamilyRaw, error: familyError } = await serviceClient
       .from("families")
       .insert({
         family_name: `Rodzina ${displayName}`,
@@ -97,6 +100,9 @@ async function ensureParentProfile(user: User | null) {
       })
       .select("id")
       .maybeSingle()
+
+    type FamilyRow = Pick<Database["public"]["Tables"]["families"]["Row"], "id">
+    const newFamily = (newFamilyRaw as FamilyRow | null) ?? null
 
     if (familyError || !newFamily) {
       console.error("[ensureParentProfile] Failed to create family", familyError)
@@ -258,4 +264,16 @@ export async function loginParent(
   await ensureParentProfile(data.user)
   console.log("[loginParent] login success, redirecting")
   redirect("/parent/dashboard")
+}
+
+export async function logoutParent(): Promise<void> {
+  const supabase = await createSupabaseServerClient({ allowCookiePersistence: true })
+
+  try {
+    await supabase.auth.signOut({ scope: "global" })
+  } catch (error) {
+    console.error("[logoutParent] Failed to sign out", error)
+  }
+
+  redirect("/auth/parent?status=logged_out")
 }

@@ -223,7 +223,6 @@ export async function createParentAccount(options: CreateParentOptions = {}): Pr
     email,
     password,
     email_confirm: true,
-    email_confirmed_at: new Date().toISOString(),
     user_metadata: {
       full_name: displayName,
       role: "parent",
@@ -309,7 +308,6 @@ export async function createChildAccountForProfile(
     email,
     password,
     email_confirm: true,
-    email_confirmed_at: new Date().toISOString(),
     user_metadata: {
       full_name: displayName,
       role: "child",
@@ -646,7 +644,7 @@ export async function seedChildViewData(
     },
   ])
 
-  const walletTransactions = [
+  const walletTransactions: Database["public"]["Tables"]["point_transactions"]["Insert"][] = [
     {
       family_id: familyId,
       profile_id: childProfileId,

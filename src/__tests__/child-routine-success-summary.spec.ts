@@ -89,6 +89,8 @@ describe("fetchChildRoutineSuccessSummary", () => {
     mockedListRoutinePerformance.mockResolvedValue({
       data: [
         {
+          routineId: "routine-1",
+          childProfileId: "child-1",
           bestDurationSeconds: 120,
           bestSessionId: "record-session",
           lastCompletedSessionId: "session-1",
@@ -107,6 +109,7 @@ describe("fetchChildRoutineSuccessSummary", () => {
           description: "Finish fast",
           iconUrl: null,
           awardedAt: "2025-01-01T07:05:00Z",
+          metadata: {}
         },
       ],
     })
@@ -146,6 +149,8 @@ describe("fetchChildRoutineSuccessSummary", () => {
     mockedListRoutinePerformance.mockResolvedValue({
       data: [
         {
+          routineId: "routine-1",
+          childProfileId: "child-1",
           bestDurationSeconds: 140,
           bestSessionId: "record-session",
           lastCompletedSessionId: "session-9",
@@ -164,6 +169,7 @@ describe("fetchChildRoutineSuccessSummary", () => {
           description: null,
           iconUrl: null,
           awardedAt: "2024-12-31T12:00:00Z",
+          metadata: {}
         },
       ],
     })

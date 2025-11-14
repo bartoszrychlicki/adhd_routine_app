@@ -4,14 +4,9 @@ import { useActionState, useEffect, useState } from "react"
 import { useFormStatus } from "react-dom"
 import { Eye, EyeOff, RefreshCcw, Save } from "lucide-react"
 
-import { updatePinAction } from "@/app/parent/children/actions"
+import { updatePinAction, type PinActionState } from "@/app/parent/children/actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
-type PinActionState = {
-  status: "idle" | "success" | "error"
-  message?: string
-}
 
 const initialState: PinActionState = { status: "idle" }
 
@@ -48,7 +43,7 @@ type ChildPinManagerProps = {
 }
 
 export function ChildPinManager({ childId, currentPin }: ChildPinManagerProps) {
-  const [state, formAction] = useActionState(updatePinAction, initialState)
+  const [state, formAction] = useActionState<PinActionState, FormData>(updatePinAction, initialState)
   const [showPin, setShowPin] = useState(false)
   const [formVisible, setFormVisible] = useState(false)
 

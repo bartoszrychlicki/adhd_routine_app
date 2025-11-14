@@ -4,21 +4,13 @@ import { revalidatePath } from "next/cache"
 
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase"
 
-export type ToggleRoutineState = {
-  status: "idle" | "success" | "error"
-  message?: string
-}
-
-export async function toggleRoutineActiveAction(
-  _prev: ToggleRoutineState,
-  formData: FormData
-): Promise<ToggleRoutineState> {
+export async function toggleRoutineActiveAction(formData: FormData): Promise<void> {
   try {
     const routineId = formData.get("routineId")
     const desiredState = formData.get("isActive")
 
     if (typeof routineId !== "string" || routineId.length === 0) {
-      return { status: "error", message: "Brak identyfikatora rutyny." }
+      throw new Error("Brak identyfikatora rutyny.")
     }
 
     const isActive = desiredState === "true"
@@ -30,7 +22,7 @@ export async function toggleRoutineActiveAction(
     } = await supabase.auth.getUser()
 
     if (userError || !user) {
-      return { status: "error", message: "Twoja sesja wygasła. Zaloguj się ponownie." }
+      throw new Error("Twoja sesja wygasła. Zaloguj się ponownie.")
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -41,11 +33,11 @@ export async function toggleRoutineActiveAction(
       .maybeSingle()
 
     if (profileError || !profile?.family_id) {
-      return { status: "error", message: "Nie znaleziono profilu rodzica." }
+      throw new Error("Nie znaleziono profilu rodzica.")
     }
 
     if (profile.role !== "parent" && profile.role !== "admin") {
-      return { status: "error", message: "Brak uprawnień do zmiany statusu rutyny." }
+      throw new Error("Brak uprawnień do zmiany statusu rutyny.")
     }
 
     const serviceClient = createSupabaseServiceRoleClient()
@@ -57,13 +49,12 @@ export async function toggleRoutineActiveAction(
 
     if (updateError) {
       console.error("[toggleRoutineActiveAction] update failed", updateError)
-      return { status: "error", message: "Nie udało się zaktualizować rutyny." }
+      throw new Error("Nie udało się zaktualizować rutyny.")
     }
 
     revalidatePath("/parent/routines")
-    return { status: "success", message: "Status rutyny został zaktualizowany." }
   } catch (error) {
     console.error("[toggleRoutineActiveAction] unexpected", error)
-    return { status: "error", message: "Wystąpił nieoczekiwany błąd." }
+    throw error instanceof Error ? error : new Error("Wystąpił nieoczekiwany błąd.")
   }
 }

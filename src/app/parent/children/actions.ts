@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
+export type PinActionState = {
+  status: "idle" | "success" | "error"
+  message?: string
+}
+
 function resolveOrigin() {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "http://localhost:3000"
   return base.replace(/\/$/, "")
@@ -30,9 +35,9 @@ async function performAuthedRequest(path: string, init: RequestInit) {
 }
 
 export async function updatePinAction(
-  _prevState: { status: "idle" | "success" | "error"; message?: string },
+  _prevState: PinActionState,
   formData: FormData
-) {
+): Promise<PinActionState> {
   try {
     const childId = formData.get("childId")
     const pin = formData.get("pin")

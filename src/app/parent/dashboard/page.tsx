@@ -32,6 +32,10 @@ export default async function ParentDashboardPage() {
     redirect("/child/routines")
   }
 
+  if (!activeProfile.familyId) {
+    redirect("/onboarding/family")
+  }
+
   const supabase = await createSupabaseServerClient()
 
   const { data: family, error } = await supabase

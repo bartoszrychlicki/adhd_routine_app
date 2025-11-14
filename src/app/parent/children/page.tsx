@@ -5,6 +5,7 @@ import { QrCode } from "lucide-react"
 
 import { createSupabaseServerClient } from "@/lib/supabase"
 import { getActiveProfile } from "@/lib/auth/get-active-profile"
+import { getAppBaseUrl } from "@/lib/env"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -33,7 +34,7 @@ export default async function ParentChildrenPage() {
   }
 
   const supabase = await createSupabaseServerClient()
-  const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "http://localhost:3000").replace(/\/$/, "")
+  const appBaseUrl = getAppBaseUrl()
 
   const { data: children } = await supabase
     .from("profiles")

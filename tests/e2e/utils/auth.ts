@@ -3,10 +3,7 @@ import type { Page } from "@playwright/test"
 import type { SupabaseSessionCookie } from "./supabase-admin"
 
 type SameSiteAttribute = "Lax" | "Strict" | "None"
-type RawSameSite =
-  SupabaseSessionCookie["options"] extends { sameSite?: infer T }
-    ? T
-    : never
+type RawSameSite = NonNullable<SupabaseSessionCookie["options"]>["sameSite"]
 
 type ChildSessionInput = {
   childId: string

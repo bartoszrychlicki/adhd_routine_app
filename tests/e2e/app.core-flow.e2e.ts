@@ -7,8 +7,13 @@ import {
   ensureRoutineSessionWindow,
   getMissingSupabaseAdminEnv,
   listChildProfilesForFamily,
-  type ChildProfileDetails,
 } from "./utils/supabase-admin"
+
+type ChildProfileSummary = {
+  id: string
+  displayName: string
+  pin: string | null
+}
 
 const BASE_URL_FALLBACK = "http://127.0.0.1:3000"
 
@@ -17,6 +22,7 @@ test.describe("Core product journey", () => {
     const missing = getMissingSupabaseAdminEnv()
     if (missing.length > 0) {
       test.skip(
+        true,
         `Pominięto scenariusz wymagający Supabase. Ustaw zmienne środowiskowe: ${missing.join(", ")}`
       )
     }
@@ -27,7 +33,7 @@ test.describe("Core product journey", () => {
     const baseURL =
       (testInfo.project.use?.baseURL as string | undefined) ?? BASE_URL_FALLBACK
 
-    let childProfile: ChildProfileDetails | null = null
+    let childProfile: ChildProfileSummary | null = null
 
     try {
       // 1. Parent login
@@ -57,7 +63,9 @@ test.describe("Core product journey", () => {
         throw new Error("Child profile not created via onboarding")
       }
 
-      expect.soft(childProfile.pin).toBe(childPin)
+      const resolvedChildProfile = childProfile as ChildProfileSummary
+
+      expect.soft(resolvedChildProfile.pin).toBe(childPin)
 
       // 3. Save routines via onboarding
       await page.goto("/onboarding/routines")
@@ -67,7 +75,7 @@ test.describe("Core product journey", () => {
       // Prepare routine window and reward data
       await ensureRoutineSessionWindow({
         familyId: parentAccount.familyId,
-        childProfileId: childProfile.id,
+        childProfileId: resolvedChildProfile.id,
         routineType: "morning",
       })
       await ensureRewardForFamily(parentAccount.familyId, {
@@ -79,7 +87,7 @@ test.describe("Core product journey", () => {
       const childContext = await browser.newContext({ baseURL })
       const childPage = await childContext.newPage()
 
-      await childPage.goto(`/auth/child?childId=${childProfile.id}`)
+      await childPage.goto(`/auth/child?childId=${resolvedChildProfile.id}`)
       await childPage.getByLabel("PIN logowania").fill(childPin)
       await childPage.getByRole("button", { name: "Wejdź do rutyn" }).click()
       await childPage.waitForURL(/child\/home/)
@@ -92,7 +100,7 @@ test.describe("Core product journey", () => {
       await expect(startButton).toBeVisible()
       const startHelper = childPage.getByText("Uruchom timer, aby rozpocząć misję.")
       const startResponsePromise = childPage.waitForResponse((response) => {
-        return response.url().includes(`/api/v1/children/${childProfile.id}/sessions`) && response.request().method() === "POST"
+        return response.url().includes(`/api/v1/children/${resolvedChildProfile.id}/sessions`) && response.request().method() === "POST"
       })
       await startButton.click()
       const startResponse = await startResponsePromise

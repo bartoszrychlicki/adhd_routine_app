@@ -1,7 +1,6 @@
 import { addDays, startOfDay } from "date-fns"
-import type { SupabaseClient } from "@supabase/supabase-js"
-
 import type { Database } from "@/db/database.types"
+import type { createSupabaseServerClient } from "@/lib/supabase"
 import { getSessionDetails } from "@/app/api/_services/routineSessionsService"
 import { listChildAchievements } from "@/app/api/_services/achievementsService"
 import { listRoutinePerformance } from "@/app/api/_services/performanceService"
@@ -15,10 +14,11 @@ import {
   ChildRoutineHistoryItem,
   ChildRoutinePreview,
   ChildRoutineSessionViewModel,
+  ChildRoutineTask,
   ChildRoutineSuccessSummary,
 } from "./types"
 
-type AppSupabaseClient = SupabaseClient<Database>
+type AppSupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
 
 const DEFAULT_BOARD_DAYS_AHEAD = 7
 
@@ -54,6 +54,7 @@ type RoutineSessionRow = {
   points_awarded: number | null
   created_at: string
   duration_seconds: number | null
+  best_time_beaten: boolean | null
 }
 
 type RoutineSessionInsert = Database["public"]["Tables"]["routine_sessions"]["Insert"]
@@ -317,7 +318,7 @@ export async function fetchChildRoutineBoard(
   async function loadSessions(): Promise<RoutineSessionRow[]> {
     const { data, error } = await client
       .from("routine_sessions")
-      .select("id, routine_id, session_date, status, started_at, planned_end_at, completed_at, points_awarded, created_at")
+      .select("id, routine_id, session_date, status, started_at, planned_end_at, completed_at, points_awarded, created_at, best_time_beaten")
       .eq("child_profile_id", childProfileId)
       .gte("session_date", todayDate)
       .lte("session_date", limitDate)
@@ -486,7 +487,7 @@ export async function fetchChildRoutineSessionViewModelForChild(
   const { data: sessionRow, error: sessionError } = await client
     .from("routine_sessions")
     .select(
-      "id, routine_id, child_profile_id, session_date, status, started_at, planned_end_at, completed_at, duration_seconds, points_awarded"
+      "id, routine_id, child_profile_id, session_date, status, started_at, planned_end_at, completed_at, duration_seconds, points_awarded, best_time_beaten"
     )
     .eq("id", sessionId)
     .eq("child_profile_id", childProfileId)
@@ -536,6 +537,7 @@ export async function fetchChildRoutineSessionViewModelForChild(
 
   const steps = (taskRows ?? []).map((row) => {
     const task = row as RoutineTaskDetailRow
+    const status: ChildRoutineTask["status"] = completedTaskIds.has(task.id) ? "completed" : "pending"
     return {
       id: task.id,
       title: task.name,
@@ -543,7 +545,7 @@ export async function fetchChildRoutineSessionViewModelForChild(
       points: task.points ?? 0,
       durationSeconds: task.expected_duration_seconds ?? null,
       isOptional: task.is_optional,
-      status: completedTaskIds.has(task.id) ? "completed" : "pending",
+      status,
     }
   })
 

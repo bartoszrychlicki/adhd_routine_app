@@ -4,11 +4,6 @@ import { revalidatePath } from "next/cache"
 
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "@/lib/supabase"
 
-export type RewardToggleState = {
-  status: "idle" | "success" | "error"
-  message?: string
-}
-
 async function getParentContext() {
   const supabase = await createSupabaseServerClient()
   const {
@@ -41,21 +36,18 @@ async function getParentContext() {
   } as const
 }
 
-export async function toggleRewardActiveAction(
-  _prev: RewardToggleState,
-  formData: FormData
-): Promise<RewardToggleState> {
+export async function toggleRewardActiveAction(formData: FormData): Promise<void> {
   try {
     const context = await getParentContext()
     if ("error" in context) {
-      return { status: "error", message: context.error }
+      throw new Error(context.error)
     }
 
     const rewardId = formData.get("rewardId")
     const isActive = formData.get("isActive") === "true"
 
     if (typeof rewardId !== "string" || rewardId.length === 0) {
-      return { status: "error", message: "Brak identyfikatora nagrody." }
+      throw new Error("Brak identyfikatora nagrody.")
     }
 
     const supabase = createSupabaseServiceRoleClient()
@@ -67,13 +59,12 @@ export async function toggleRewardActiveAction(
 
     if (updateError) {
       console.error("[toggleRewardActiveAction] failed", updateError)
-      return { status: "error", message: "Nie udało się zmienić statusu nagrody." }
+      throw new Error("Nie udało się zmienić statusu nagrody.")
     }
 
     revalidatePath("/parent/rewards")
-    return { status: "success", message: "Status nagrody zaktualizowany." }
   } catch (error) {
     console.error("[toggleRewardActiveAction] unexpected", error)
-    return { status: "error", message: "Wystąpił nieoczekiwany błąd." }
+    throw error instanceof Error ? error : new Error("Wystąpił nieoczekiwany błąd.")
   }
 }

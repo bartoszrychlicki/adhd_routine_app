@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { createSupabaseServerClient } from "@/lib/supabase"
+import { createSupabaseServerClient, type Database } from "@/lib/supabase"
 import { assertParentOrAdmin, requireAuthContext } from "../../../_lib/authContext"
 import { ForbiddenError, handleRouteError, mapSupabaseError } from "../../../_lib/errors"
 import { ensureUuid } from "../../../_lib/validation"
@@ -23,16 +23,22 @@ async function ensureRedemptionFamily(
     throw mapSupabaseError(error)
   }
 
-  if (!data) {
+  type RedemptionRow = Database["public"]["Tables"]["reward_redemptions"]["Row"] & {
+    rewards: { family_id: string }
+  }
+
+  const row = (data as RedemptionRow | null) ?? null
+
+  if (!row) {
     throw new ForbiddenError("Redemption not found")
   }
 
-  if (data.rewards.family_id !== familyId) {
+  if (row.rewards.family_id !== familyId) {
     throw new ForbiddenError("Redemption does not belong to this family")
   }
 
   // Ensure child belongs to family by later verification
-  return data.child_profile_id
+  return row.child_profile_id
 }
 
 type RouteParams = {
