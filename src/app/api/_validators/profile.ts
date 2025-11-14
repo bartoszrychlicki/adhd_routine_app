@@ -1,3 +1,4 @@
+import type { Json } from "@/db/database.types"
 import type {
   CreateChildProfileCommand,
   ChildAccessTokenCreateCommand,
@@ -91,20 +92,20 @@ function ensureOptionalString(value: unknown, field: string): string | undefined
   return value
 }
 
-function ensureSettings(value: unknown): Record<string, unknown> | undefined {
+function ensureSettings(value: unknown): Json | undefined {
   if (typeof value === "undefined") {
     return undefined
   }
 
   if (value === null) {
-    return {} as Record<string, unknown>
+    return {} as Json
   }
 
   if (typeof value !== "object") {
     throw new ValidationError("settings must be an object")
   }
 
-  return value as Record<string, unknown>
+  return value as Json
 }
 
 export function parseCreateChildProfilePayload(
