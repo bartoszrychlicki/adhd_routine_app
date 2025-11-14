@@ -406,6 +406,10 @@ export async function startRoutineSession(
     sessionRow = data
   }
 
+  if (!sessionRow) {
+    throw new NotFoundError("Failed to initialize routine session")
+  }
+
   const taskOrder = await fetchTaskOrder(
     client,
     command.routineId,
