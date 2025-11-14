@@ -1510,6 +1510,7 @@ export type Database = {
           best_session_id: string | null
           child_profile_id: string
           last_completed_session_id: string | null
+          last_completed_at: string | null
           routine_id: string
           streak_days: number
           updated_at: string
@@ -1519,6 +1520,7 @@ export type Database = {
           best_session_id?: string | null
           child_profile_id: string
           last_completed_session_id?: string | null
+          last_completed_at?: string | null
           routine_id: string
           streak_days?: number
           updated_at?: string
@@ -1528,6 +1530,7 @@ export type Database = {
           best_session_id?: string | null
           child_profile_id?: string
           last_completed_session_id?: string | null
+          last_completed_at?: string | null
           routine_id?: string
           streak_days?: number
           updated_at?: string
@@ -2653,4 +2656,3 @@ export const Constants = {
     },
   },
 } as const
-
