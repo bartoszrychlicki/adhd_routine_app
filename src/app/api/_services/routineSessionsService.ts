@@ -536,7 +536,6 @@ export async function getSessionDetails(
     if (data) {
       details.performance = {
         routineId: data.routine_id,
-        childProfileId: data.child_profile_id,
         bestDurationSeconds: data.best_duration_seconds,
         bestSessionId: data.best_session_id,
         lastCompletedSessionId: data.last_completed_session_id,
