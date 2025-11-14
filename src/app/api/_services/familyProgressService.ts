@@ -53,7 +53,7 @@ async function fetchDailySessions(
 
 async function fetchTasksForSessions(
   client: Client,
-  sessions: Database["public"]["Tables"]["routine_sessions"]["Row"]
+  sessions: Database["public"]["Tables"]["routine_sessions"]["Row"][]
 ): Promise<Map<string, FamilyProgressChildSummaryDto["tasks"]>> {
   const sessionIds = sessions.map((session) => session.id)
   if (sessionIds.length === 0) {
