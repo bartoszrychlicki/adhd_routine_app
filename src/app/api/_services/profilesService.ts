@@ -1,5 +1,5 @@
 import { randomBytes, scryptSync } from "crypto"
-import type { Database } from "@/db/database.types"
+import type { Database, Json } from "@/db/database.types"
 import type {
   CreateChildProfileCommand,
   ProfileCreatedDto,
@@ -190,14 +190,14 @@ function buildInsertPayload(
     email: command.email ?? null,
     avatar_url: command.avatarUrl ?? null,
     settings: (() => {
-      const baseSettings = (command.settings ?? {}) as Record<string, unknown>
-      const nextSettings: Record<string, unknown> = { ...baseSettings }
+      const baseSettings = (command.settings ?? {}) as Record<string, Json>
+      const nextSettings: Record<string, Json> = { ...baseSettings }
 
       if (typeof command.pin === "string" && command.pin.length > 0) {
         nextSettings.pin_plain = command.pin
       }
 
-      return nextSettings
+      return nextSettings as Json
     })(),
     pin_failed_attempts: 0,
     pin_lock_expires_at: null
