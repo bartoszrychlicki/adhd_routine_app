@@ -1,6 +1,6 @@
 import { addMinutes, differenceInCalendarDays } from "date-fns"
 import { awardAchievement } from "./achievementsService"
-import type { Database } from "@/db/database.types"
+import type { Database, Json } from "@/db/database.types"
 import type {
   CompleteRoutineSessionCommand,
   RoutineSessionChildSummaryDto,
@@ -292,7 +292,7 @@ async function awardAchievementsIfAvailable(
   client: Client,
   childProfileId: string,
   familyId: string,
-  achievementCodes: Array<{ code: string; metadata?: Record<string, unknown> }>
+  achievementCodes: Array<{ code: string; metadata?: Json }>
 ): Promise<void> {
   for (const entry of achievementCodes) {
     try {
@@ -302,7 +302,7 @@ async function awardAchievementsIfAvailable(
       }
       await awardAchievement(client, childProfileId, {
         achievementId,
-        metadata: entry.metadata ?? {},
+        metadata: (entry.metadata ?? {}) as Json,
       })
     } catch (error) {
       if (error instanceof ConflictError) {
