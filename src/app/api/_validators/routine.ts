@@ -1,3 +1,4 @@
+import type { Json } from "@/db/database.types"
 import type {
   RoutineChildUpsertCommand,
   RoutineChildrenReorderCommand,
@@ -62,20 +63,20 @@ function ensureNonNegativeInteger(value: unknown, field: string): number {
   return value
 }
 
-function ensureSettings(value: unknown): Record<string, unknown> | undefined {
+function ensureSettings(value: unknown): Json | undefined {
   if (typeof value === "undefined") {
     return undefined
   }
 
   if (value === null) {
-    return {}
+    return {} as Json
   }
 
   if (typeof value !== "object") {
     throw new ValidationError("settings must be an object")
   }
 
-  return value as Record<string, unknown>
+  return value as Json
 }
 
 export type RoutineListQuery = {
@@ -165,7 +166,7 @@ export function parseRoutineCreatePayload(
     )
   }
 
-  const settings = ensureSettings(record.settings) ?? {}
+  const settings = ensureSettings(record.settings) ?? ({} as Json)
 
   return {
     name,
@@ -221,7 +222,7 @@ export function parseRoutineUpdatePayload(
   }
 
   if (Object.prototype.hasOwnProperty.call(record, "settings")) {
-    command.settings = ensureSettings(record.settings) ?? {}
+    command.settings = ensureSettings(record.settings) ?? ({} as Json)
   }
 
   if (Object.prototype.hasOwnProperty.call(record, "isActive")) {
