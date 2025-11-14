@@ -1,3 +1,4 @@
+import type { Json } from "@/db/database.types"
 import type {
   AwardAchievementCommand,
   CreateAchievementCommand,
@@ -99,7 +100,7 @@ export function parseCreateRewardPayload(
     typeof record.description === "string" ? record.description : undefined
   const settings =
     record.settings && typeof record.settings === "object"
-      ? (record.settings as Record<string, unknown>)
+      ? (record.settings as Json)
       : undefined
 
   return {
@@ -152,7 +153,7 @@ export function parseUpdateRewardPayload(
     if (record.settings && typeof record.settings !== "object") {
       throw new ValidationError("settings must be an object")
     }
-    command.settings = record.settings as Record<string, unknown>
+    command.settings = record.settings as Json
   }
 
   if (Object.prototype.hasOwnProperty.call(record, "deletedAt")) {
