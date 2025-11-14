@@ -476,7 +476,9 @@ async function fetchSessionTasks(
 
   const completionMap = new Map<string, CompletionRow>()
   completionRows.forEach((item) => {
-    completionMap.set(item.routine_task_id, item)
+    if (item.routine_task_id) {
+      completionMap.set(item.routine_task_id, item)
+    }
   })
 
   return data.map((task) => {
