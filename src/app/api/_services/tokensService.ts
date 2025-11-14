@@ -117,10 +117,7 @@ export async function listChildAccessTokens(
 
   const query = client
     .from("child_access_tokens")
-    .select(
-      `id, profile_id, token, created_at, last_used_at, deactivated_at`,
-      { order: { ascending: false, column: "created_at" } }
-    )
+    .select(`id, profile_id, token, created_at, last_used_at, deactivated_at`)
     .eq("profile_id", profileId)
     .order("created_at", { ascending: false })
 
