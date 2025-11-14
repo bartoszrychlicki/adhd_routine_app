@@ -240,7 +240,12 @@ export function parseCreateChildTokenPayload(
     throw new ValidationError("metadata must be an object if provided")
   }
 
+  const metadata =
+    typeof record.metadata === "undefined"
+      ? ({} as Json)
+      : ((record.metadata ?? {}) as Json)
+
   return {
-    metadata: (record.metadata as Record<string, unknown>) ?? {}
+    metadata
   }
 }
