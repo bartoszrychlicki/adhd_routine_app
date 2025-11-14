@@ -434,7 +434,7 @@ export function parseAwardAchievementPayload(
 
   const metadata =
     record.metadata && typeof record.metadata === "object"
-      ? (record.metadata as Record<string, unknown>)
+      ? (record.metadata as Json)
       : undefined
 
   return {
