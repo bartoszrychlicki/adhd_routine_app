@@ -12,16 +12,20 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' && secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY != '' && secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
-      PLAYWRIGHT_SUPABASE_URL: ${{ secrets.PLAYWRIGHT_SUPABASE_URL != '' && secrets.PLAYWRIGHT_SUPABASE_URL || vars.PLAYWRIGHT_SUPABASE_URL != '' && vars.PLAYWRIGHT_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
-      PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY != '' && secrets.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY || vars.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY != '' && vars.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY != '' && secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Export Supabase env vars
+        run: |
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${{ coalesce(secrets.NEXT_PUBLIC_SUPABASE_URL, vars.NEXT_PUBLIC_SUPABASE_URL) }}";
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ coalesce(secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY, vars.NEXT_PUBLIC_SUPABASE_ANON_KEY) }}";
+            echo "SUPABASE_SERVICE_ROLE_KEY=${{ coalesce(secrets.SUPABASE_SERVICE_ROLE_KEY, vars.SUPABASE_SERVICE_ROLE_KEY) }}";
+            echo "PLAYWRIGHT_SUPABASE_URL=${{ coalesce(secrets.PLAYWRIGHT_SUPABASE_URL, vars.PLAYWRIGHT_SUPABASE_URL, secrets.NEXT_PUBLIC_SUPABASE_URL, vars.NEXT_PUBLIC_SUPABASE_URL) }}";
+            echo "PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY=${{ coalesce(secrets.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY, vars.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY, secrets.SUPABASE_SERVICE_ROLE_KEY, vars.SUPABASE_SERVICE_ROLE_KEY) }}";
+          } >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
