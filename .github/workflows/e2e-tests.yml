@@ -91,7 +91,8 @@ jobs:
       - name: Verify env injection
         run: |
           ls -a .env*
-          node -e "console.log('NEXT_PUBLIC_SUPABASE_URL set:', Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL))"
+          node -e "const url = process.env.NEXT_PUBLIC_SUPABASE_URL; console.log('NEXT_PUBLIC_SUPABASE_URL length:', url ? url.length : 0, 'preview:', url ? url.slice(0, 16) : '');"
+          sed 's/=.*/=[REDACTED]/' .env.local
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
