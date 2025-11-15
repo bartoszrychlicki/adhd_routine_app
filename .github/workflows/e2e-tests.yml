@@ -12,54 +12,14 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Export Supabase env vars
-        env:
-          SECRET_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          VAR_NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          SECRET_NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          VAR_NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SECRET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          VAR_SUPABASE_SERVICE_ROLE_KEY: ${{ vars.SUPABASE_SERVICE_ROLE_KEY }}
-          SECRET_PLAYWRIGHT_SUPABASE_URL: ${{ secrets.PLAYWRIGHT_SUPABASE_URL }}
-          VAR_PLAYWRIGHT_SUPABASE_URL: ${{ vars.PLAYWRIGHT_SUPABASE_URL }}
-          SECRET_PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY }}
-          VAR_PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY: ${{ vars.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          set -euo pipefail
-          pick() {
-            if [ -n "$1" ]; then
-              echo "$1"
-            elif [ -n "$2" ]; then
-              echo "$2"
-            else
-              echo ""
-            fi
-          }
-
-          NEXT_PUBLIC_SUPABASE_URL="$(pick "$SECRET_NEXT_PUBLIC_SUPABASE_URL" "$VAR_NEXT_PUBLIC_SUPABASE_URL")"
-          NEXT_PUBLIC_SUPABASE_ANON_KEY="$(pick "$SECRET_NEXT_PUBLIC_SUPABASE_ANON_KEY" "$VAR_NEXT_PUBLIC_SUPABASE_ANON_KEY")"
-          SUPABASE_SERVICE_ROLE_KEY="$(pick "$SECRET_SUPABASE_SERVICE_ROLE_KEY" "$VAR_SUPABASE_SERVICE_ROLE_KEY")"
-          PLAYWRIGHT_SUPABASE_URL="$(pick "$SECRET_PLAYWRIGHT_SUPABASE_URL" "$VAR_PLAYWRIGHT_SUPABASE_URL")"
-          if [ -z "$PLAYWRIGHT_SUPABASE_URL" ]; then
-            PLAYWRIGHT_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL"
-          fi
-          PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY="$(pick "$SECRET_PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY" "$VAR_PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY")"
-          if [ -z "$PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY" ]; then
-            PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
-          fi
-
-          cat <<'EOF' >> $GITHUB_ENV
-          NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
-          SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY
-          PLAYWRIGHT_SUPABASE_URL=$PLAYWRIGHT_SUPABASE_URL
-          PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY=$PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY
-          EOF
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -70,30 +30,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create env files
-        run: |
-          {
-            printf "NEXT_PUBLIC_SUPABASE_URL=%s\n" "$NEXT_PUBLIC_SUPABASE_URL"
-            printf "NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n" "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
-            printf "SUPABASE_SERVICE_ROLE_KEY=%s\n" "$SUPABASE_SERVICE_ROLE_KEY"
-            printf "PLAYWRIGHT_SUPABASE_URL=%s\n" "$PLAYWRIGHT_SUPABASE_URL"
-            printf "PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY=%s\n" "$PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY"
-          } > .env.local
-
-          cp .env.local .env.development.local
-
-      - name: Verify env injection
-        run: |
-          ls -a .env*
-          node -e "const url = process.env.NEXT_PUBLIC_SUPABASE_URL; console.log('NEXT_PUBLIC_SUPABASE_URL length:', url ? url.length : 0, 'preview:', url ? url.slice(0, 16) : '');"
-          sed 's/=.*/=[REDACTED]/' .env.local
-
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
       - name: Run Playwright E2E
         id: e2e_tests
-        run: npm run test:e2e
+        run: |
+          export PLAYWRIGHT_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL}"
+          export PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY}"
+          cat <<EOF > .env.local
+NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+PLAYWRIGHT_SUPABASE_URL=${PLAYWRIGHT_SUPABASE_URL}
+PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY=${PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY}
+EOF
+          cp .env.local .env.development.local
+          npm run test:e2e
 
       - name: Upload Playwright report
         if: always()
