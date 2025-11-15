@@ -65,7 +65,7 @@ export default async function Home() {
             <RoleCard
               role="child"
               href="/auth/child"
-              title="Jestem Erykiem"
+              title="Jestem dzieckiem"
               description="Wejdź do grywalizowanego interfejsu rutyn i zdobywaj punkty za zadania."
               highlight="Tryb przygody"
               features={[
