@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create env file
+      - name: Create env files
         run: |
           cat <<'EOF' > .env.local
           NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }}
@@ -41,6 +41,19 @@ jobs:
           PLAYWRIGHT_SUPABASE_URL=${{ env.PLAYWRIGHT_SUPABASE_URL }}
           PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY=${{ env.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY }}
           EOF
+
+          cat <<'EOF' > .env.development.local
+          NEXT_PUBLIC_SUPABASE_URL=${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ env.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ env.SUPABASE_SERVICE_ROLE_KEY }}
+          PLAYWRIGHT_SUPABASE_URL=${{ env.PLAYWRIGHT_SUPABASE_URL }}
+          PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY=${{ env.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY }}
+          EOF
+
+      - name: Verify env injection
+        run: |
+          ls -a .env*
+          node -e "console.log('NEXT_PUBLIC_SUPABASE_URL set:', Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL))"
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
