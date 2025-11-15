@@ -89,9 +89,38 @@ export type ChildViewSeedResult = {
   streakDays: number
 }
 
+const SUPABASE_HEALTH_TIMEOUT_MS = 5_000
+
+let supabaseHealthCheck: Promise<void> | null = null
+
 function getEnv(name: string): string | undefined {
   const value = process.env[name]
   return typeof value === "string" && value.length > 0 ? value : undefined
+}
+
+async function ensureSupabaseIsReachable(url: string): Promise<void> {
+  if (!supabaseHealthCheck) {
+    supabaseHealthCheck = (async () => {
+      const healthUrl = new URL("/auth/v1/health", url)
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), SUPABASE_HEALTH_TIMEOUT_MS)
+      try {
+        const response = await fetch(healthUrl, { signal: controller.signal })
+        if (!response.ok) {
+          throw new Error(`Healthcheck returned status ${response.status}`)
+        }
+      } catch (error) {
+        throw new Error(
+          `Supabase test instance is unreachable at ${healthUrl}. ` +
+            `Upewnij się, że lokalny Supabase działa (np. "npm run supabase:start"). Original error: ${error}`
+        )
+      } finally {
+        clearTimeout(timer)
+      }
+    })()
+  }
+
+  return supabaseHealthCheck
 }
 
 export function getMissingSupabaseAdminEnv(): string[] {
@@ -122,7 +151,7 @@ export function getMissingSupabaseAdminEnv(): string[] {
   })
 }
 
-function createAdminClient(): SupabaseAdminClient {
+async function createAdminClient(): Promise<SupabaseAdminClient> {
   const url = getEnv("PLAYWRIGHT_SUPABASE_URL") ?? getEnv("NEXT_PUBLIC_SUPABASE_URL")
   const serviceRoleKey =
     getEnv("PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY") ?? getEnv("SUPABASE_SERVICE_ROLE_KEY")
@@ -132,6 +161,8 @@ function createAdminClient(): SupabaseAdminClient {
       "Supabase service role environment variables are not set. Provide PLAYWRIGHT_SUPABASE_URL and PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY (or reuse NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)."
     )
   }
+
+  await ensureSupabaseIsReachable(url)
 
   return createClient<Database>(url, serviceRoleKey, {
     auth: {
@@ -212,7 +243,7 @@ async function ensureParentResources(
 }
 
 export async function createParentAccount(options: CreateParentOptions = {}): Promise<ParentAccount> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   const email =
     options.email ??
     `parent+${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}@playwright.test`
@@ -245,7 +276,7 @@ export async function createParentAccount(options: CreateParentOptions = {}): Pr
 }
 
 export async function deleteParentAccount(account: ParentAccount): Promise<void> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
 
   await client.from("profiles").delete().eq("family_id", account.familyId)
   await client.from("families").delete().eq("id", account.familyId)
@@ -265,7 +296,7 @@ export async function createChildProfileForFamily(
   familyId: string,
   options: CreateChildOptions = {}
 ): Promise<ChildProfileFixture> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   const displayName = options.displayName ?? `Eryk ${crypto.randomUUID().slice(0, 4)}`
 
   const { data, error } = await client
@@ -297,7 +328,7 @@ export async function createChildAccountForProfile(
   childProfile: ChildProfileFixture,
   options: CreateChildAccountOptions = {}
 ): Promise<ChildAccountFixture> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   const email =
     options.email ??
     `child+${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}@playwright.test`
@@ -350,14 +381,14 @@ export async function createChildAccountForProfile(
 }
 
 export async function deleteChildAccount(account: ChildAccountFixture): Promise<void> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   await client.auth.admin.deleteUser(account.userId)
 }
 
 export async function listChildProfilesForFamily(
   familyId: string
 ): Promise<ChildProfileDetails[]> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   const { data, error } = await client
     .from("profiles")
     .select("id, display_name, settings")
@@ -440,7 +471,7 @@ export async function seedChildViewData(
   familyId: string,
   childProfileId: string
 ): Promise<ChildViewSeedResult> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   const toTimeComponent = (date: Date) => date.toISOString().slice(11, 19)
   const now = new Date()
   const today = now.toISOString().slice(0, 10)
@@ -759,7 +790,7 @@ function formatTimeComponent(date: Date): string {
 }
 
 export async function ensureRoutineSessionWindow(options: RoutineWindowOptions): Promise<string> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   const { familyId, childProfileId, routineType } = options
   const duration = options.durationMinutes ?? 30
 
@@ -845,7 +876,7 @@ export async function ensureRewardForFamily(
   familyId: string,
   options: RewardOptions = {}
 ): Promise<{ id: string }> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
   const { data, error } = await client
     .from("rewards")
     .select("id")
@@ -892,7 +923,7 @@ export async function updateRoutineWindow(
     status?: RoutineSessionStatus
   }
 ): Promise<void> {
-  const client = createAdminClient()
+  const client = await createAdminClient()
 
   const { data: sessionRow, error: sessionError } = await client
     .from("routine_sessions")
