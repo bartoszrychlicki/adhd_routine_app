@@ -591,7 +591,13 @@ export function ChildRoutineTabs({ tabs, childId, familyId, onSelectTab }: Child
                     <div className="flex flex-col gap-3">
                       <Button
                         type="button"
-                        className="w-full"
+                        className={cn(
+                          "w-full rounded-2xl font-semibold text-slate-950 shadow-[0_18px_45px_rgba(56,189,248,0.35)] transition-colors",
+                          routineIsCompleted
+                            ? "bg-emerald-400 hover:bg-emerald-300"
+                            : "bg-sky-300 hover:bg-sky-200",
+                          "disabled:bg-slate-500/30 disabled:text-slate-300 disabled:shadow-none"
+                        )}
                         disabled={finishDisabled}
                         onClick={() => handleFinishRoutine(tab, allMandatoryCompleted, completionEntries)}
                       >

@@ -32,13 +32,14 @@ Eryk’s Routine Journal is a mobile-first web app that gamifies daily chores fo
    ```
 3. **Configure environment:** Duplicate `.env.example` to `.env.local` and adjust values as needed. The defaults match the local Supabase stack (`http://127.0.0.1:54321`) and include the publishable and service role keys emitted by `supabase start`. Add optional secrets (e.g. `OPENROUTER_API_KEY`) when you enable those integrations.
 4. **Run Supabase locally:** Start the containers and apply migrations. The command is idempotent and can stay running in the background.
-   ```bash
-   npm run supabase:start
-   ```
-   After Supabase finishes booting, refresh the generated database types whenever migrations change:
-   ```bash
-   npm run supabase:types
-   ```
+  ```bash
+  npm run supabase:start
+  ```
+  After Supabase finishes booting, refresh the generated database types whenever migrations change:
+  ```bash
+  npm run supabase:types
+  ```
+  > Jeśli podczas uruchamiania dev servera zobaczysz w logach komunikaty typu `TypeError: fetch failed` / `ECONNREFUSED 127.0.0.1:54321` lub `AuthRetryableFetchError`, oznacza to jedynie, że Supabase nie działa i żądania do `http://127.0.0.1:54321` są odrzucane – upewnij się, że powyższy proces `npm run supabase:start` jest uruchomiony i gotowy, a logi znikną.
 5. **Run the dev server:**
    ```bash
    npm run dev
