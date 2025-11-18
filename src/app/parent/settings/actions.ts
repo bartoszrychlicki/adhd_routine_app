@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
+import { getAppBaseUrl } from "@/lib/env"
+
 export type UpdateFamilySettingsState =
   | { status: "idle" }
   | {
@@ -18,8 +20,7 @@ export type UpdateFamilySettingsState =
   | { status: "error"; message: string }
 
 function resolveOrigin(): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "http://localhost:3000"
-  return base.replace(/\/$/, "")
+  return getAppBaseUrl()
 }
 
 async function performAuthedRequest(path: string, init: RequestInit) {

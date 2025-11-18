@@ -30,7 +30,7 @@ Eryk’s Routine Journal is a mobile-first web app that gamifies daily chores fo
    # or
    pnpm install
    ```
-3. **Configure environment:** Duplicate `.env.example` to `.env.local` and adjust values as needed. The defaults match the local Supabase stack (`http://127.0.0.1:54321`) and include the publishable and service role keys emitted by `supabase start`. Add optional secrets (e.g. `OPENROUTER_API_KEY`) when you enable those integrations.
+3. **Configure environment:** Duplicate `.env.example` to `.env.local` and fill in the Supabase credentials (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). Set `NEXT_PUBLIC_APP_URL` to the exact origin you use during development (e.g. `http://localhost:3000`) so auth redirects work correctly. Add optional secrets (e.g. `OPENROUTER_API_KEY`) when you enable those integrations. If you rely on the local Supabase stack, replace the values with those emitted by `supabase start`.
 4. **Run Supabase locally:** Start the containers and apply migrations. The command is idempotent and can stay running in the background.
   ```bash
   npm run supabase:start

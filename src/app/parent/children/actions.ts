@@ -3,14 +3,15 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 
+import { getAppBaseUrl } from "@/lib/env"
+
 export type PinActionState = {
   status: "idle" | "success" | "error"
   message?: string
 }
 
 function resolveOrigin() {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? process.env.SITE_URL ?? "http://localhost:3000"
-  return base.replace(/\/$/, "")
+  return getAppBaseUrl()
 }
 
 async function performAuthedRequest(path: string, init: RequestInit) {

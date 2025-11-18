@@ -1,3 +1,5 @@
+import { AuthSessionMissingError } from "@supabase/auth-js"
+
 import { createSupabaseServerClient } from "@/lib/supabase"
 import type { Database } from "@/db/database.types"
 
@@ -20,6 +22,11 @@ export async function getActiveProfile(): Promise<ActiveProfile | null> {
     data: { user },
     error,
   } = await supabase.auth.getUser()
+
+  if (error instanceof AuthSessionMissingError) {
+    // Supabase throws when no auth cookie is present; treat as anonymous access.
+    return null
+  }
 
   if (error || !user) {
     console.warn("[getActiveProfile] no authenticated user", { error })

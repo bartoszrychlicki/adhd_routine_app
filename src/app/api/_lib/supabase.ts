@@ -4,11 +4,9 @@ import { HttpError } from "./errors"
 
 type TypedClient = SupabaseClient<Database>
 
-const SUPABASE_URL =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
-const SUPABASE_ANON_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 function getSupabaseKey(): string {
   if (SUPABASE_SERVICE_ROLE_KEY) {
@@ -19,11 +17,7 @@ function getSupabaseKey(): string {
     return SUPABASE_ANON_KEY
   }
 
-  throw new HttpError(
-    500,
-    "supabase_config_error",
-    "Supabase key is not configured"
-  )
+  throw new HttpError(500, "supabase_config_error", "Supabase key is not configured")
 }
 
 export function createSupabaseClient(): TypedClient {
