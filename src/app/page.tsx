@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getActiveProfile } from "@/lib/auth/get-active-profile"
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: "Wybierz tryb",
   description: "Zaloguj się jako rodzic lub dziecko, aby rozpocząć pracę z Dziennikiem Rutyn.",
