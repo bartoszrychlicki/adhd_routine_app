@@ -12,6 +12,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY || vars.SUPABASE_SERVICE_ROLE_KEY }}
 
     steps:
       - name: Checkout
@@ -31,10 +35,18 @@ jobs:
 
       - name: Run Playwright E2E
         id: e2e_tests
-        env:
-          PLAYWRIGHT_SUPABASE_URL: ${{ secrets.PLAYWRIGHT_SUPABASE_URL }}
-          PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY }}
-        run: npm run test:e2e
+        run: |
+          export PLAYWRIGHT_SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL}"
+          export PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY}"
+          cat <<'EOF' > .env.local
+NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+PLAYWRIGHT_SUPABASE_URL=${PLAYWRIGHT_SUPABASE_URL}
+PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY=${PLAYWRIGHT_SUPABASE_SERVICE_ROLE_KEY}
+EOF
+          cp .env.local .env.development.local
+          npm run test:e2e
 
       - name: Upload Playwright report
         if: always()
@@ -57,7 +69,7 @@ jobs:
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
-              repo: context.repo.name,
+              repo: context.repo.repo,
               issue_number: context.issue.number,
               body: message,
             });

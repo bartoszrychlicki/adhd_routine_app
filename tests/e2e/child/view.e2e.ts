@@ -25,7 +25,7 @@ test.describe("Authenticated child experience", () => {
     await expect(page.getByText(childSeedData.routines.completed.name)).toBeVisible()
   })
 
-  test("summarises routine stats and lists available missions", async ({
+  test("lists available missions without the stats band", async ({
     page,
     childSessionCookies,
     childSeedData,
@@ -42,25 +42,10 @@ test.describe("Authenticated child experience", () => {
 
     await expect(page.getByRole("heading", { name: "Pełny harmonogram dnia" })).toBeVisible()
 
-    const availableCard = page.locator("div").filter({
-      hasText: "Dostępne dziś",
-    })
-    await expect(availableCard.first()).toContainText(String(childSeedData.routines.totals.availableToday))
-
-    const pointsCard = page.locator("div").filter({
-      hasText: "Łączna pula punktów",
-    })
-    await expect(pointsCard.first()).toContainText(`${childSeedData.routines.totals.totalPointsToday} pkt`)
-
-    const completedCard = page.locator("div").filter({
-      hasText: "Już ukończone",
-    })
-    await expect(completedCard.first()).toContainText(String(childSeedData.routines.totals.completedToday))
-
-    const streakCard = page.locator("div").filter({
-      hasText: "Aktualna seria",
-    })
-    await expect(streakCard.first()).toContainText(`${childSeedData.streakDays} dni`)
+    await expect(page.getByText("Dostępne dziś")).toHaveCount(0)
+    await expect(page.getByText("Łączna pula punktów")).toHaveCount(0)
+    await expect(page.getByText("Już ukończone")).toHaveCount(0)
+    await expect(page.getByText("Aktualna seria")).toHaveCount(0)
 
     await expect(page.getByText(childSeedData.routines.today.name)).toBeVisible()
     await expect(page.getByText(childSeedData.routines.upcoming.name)).toBeVisible()

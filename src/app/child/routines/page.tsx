@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChildRoutineTabs } from "./components/ChildRoutineTabs"
-import { RoutineMetricsBand } from "./components/RoutineMetricsBand"
 import { buildChildRoutineTabsModel } from "./tab-model"
 import { fetchChildRoutineBoard, fetchChildRoutineSessionViewModelForChild } from "@/lib/child/queries"
 import type { ChildRoutineSessionViewModel } from "@/lib/child/types"
@@ -61,23 +60,6 @@ export default async function ChildRoutinesPage() {
     performanceStats: performanceStats.data,
   })
 
-  const todayDate = getCurrentDateInTimezone(timezone)
-  const availableToday = board.today.length
-  const totalPointsToday = board.today.reduce((sum, preview) => sum + (preview.pointsAvailable ?? 0), 0)
-  const completedToday = sessionsWithData.filter(
-    (item) => item.status === "completed" && item.sessionDate === todayDate
-  ).length
-  const streakDays = performanceStats.data.reduce(
-    (max, stat) => Math.max(max, stat.streakDays ?? 0),
-    0
-  )
-  const heroTotals = {
-    availableToday,
-    totalPointsToday,
-    completedToday,
-    streakDays,
-  }
-
   return (
     <div className="flex flex-1 flex-col gap-6">
       <header className="space-y-2">
@@ -87,8 +69,6 @@ export default async function ChildRoutinesPage() {
           Sprawdź, które misje są dostępne teraz, które rozpoczną się wkrótce i co już udało się ukończyć.
         </p>
       </header>
-
-      <RoutineMetricsBand totals={heroTotals} />
 
       <section className="space-y-4">
         {tabs.length === 0 ? (
