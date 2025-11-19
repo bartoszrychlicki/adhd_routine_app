@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import type { Metadata } from "next"
-import { QrCode } from "lucide-react"
 
 import { createSupabaseServerClient } from "@/lib/supabase"
 import { getActiveProfile } from "@/lib/auth/get-active-profile"
@@ -92,31 +91,26 @@ export default async function ParentChildrenPage() {
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-[1fr_auto]">
-                  <div className="flex flex-col gap-3">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-white">Link logowania</label>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 overflow-hidden text-ellipsis break-all rounded-md border border-slate-700/60 bg-slate-900/50 px-3 py-2 font-mono text-[11px] text-slate-100">
-                          {loginLink}
-                        </div>
-                        <ChildTokenCopyButton loginLink={loginLink} />
+                <div className="flex flex-col gap-3">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-white">Link logowania</label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 overflow-hidden text-ellipsis break-all rounded-md border border-slate-700/60 bg-slate-900/50 px-3 py-2 font-mono text-[11px] text-slate-100">
+                        {loginLink}
                       </div>
-                      <p className="text-xs leading-snug text-slate-400">
-                        Udostępnij ten link dziecku. Przy logowaniu poprosimy o aktualny PIN.
-                      </p>
+                      <ChildTokenCopyButton loginLink={loginLink} />
                     </div>
-
-                    <ChildPinManager childId={child.id} currentPin={storedPin} />
-
-                    <div className="flex flex-wrap gap-2">
-                      <Button asChild size="sm" variant="secondary">
-                        <Link href={`/parent/children/${child.id}/preview`}>Wejdź jako dziecko</Link>
-                      </Button>
-                    </div>
+                    <p className="text-xs leading-snug text-slate-400">
+                      Udostępnij ten link dziecku. Przy logowaniu poprosimy o aktualny PIN.
+                    </p>
                   </div>
-                  <div className="flex h-32 w-32 items-center justify-center rounded-xl border border-slate-800/60 bg-slate-900/50 text-xs text-slate-400">
-                    <QrCode className="size-8" aria-hidden />
+
+                  <ChildPinManager childId={child.id} currentPin={storedPin} />
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm" variant="secondary">
+                      <Link href={`/parent/children/${child.id}/preview`}>Wejdź jako dziecko</Link>
+                    </Button>
                   </div>
                 </div>
               </CardContent>

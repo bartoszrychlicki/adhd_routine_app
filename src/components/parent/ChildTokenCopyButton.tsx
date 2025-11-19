@@ -44,7 +44,7 @@ export function ChildTokenCopyButton({ loginLink }: ChildTokenCopyButtonProps) {
         type="button"
         size="icon"
         variant={isSuccess ? "secondary" : "outline"}
-        className="size-8 border-slate-700/60"
+        className="size-8 border-slate-700/60 text-slate-300 hover:text-white"
         onClick={handleCopy}
         aria-label="Skopiuj link"
       >
