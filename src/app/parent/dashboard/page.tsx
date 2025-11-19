@@ -47,6 +47,10 @@ type ParentDashboardPageProps = {
 }
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"]
+type ChildProfileSummary = Pick<
+ProfileRow,
+"id" | "display_name" | "role" | "deleted_at"
+>
 type RewardRedemptionRow = Database["public"]["Tables"]["reward_redemptions"]["Row"] & {
   reward: { name: string } | null
   child: { display_name: string } | null
@@ -120,7 +124,7 @@ export default async function ParentDashboardPage({ searchParams }: ParentDashbo
     console.error("[parent-dashboard] failed to load children profiles", childProfilesResult.error)
   }
 
-  const childProfiles: ProfileRow[] = childProfilesResult.data ?? []
+  const childProfiles: ChildProfileSummary[] = childProfilesResult.data ?? []
   const childNameMap: Record<string, string> = Object.fromEntries(
     childProfiles.map((child) => [child.id, child.display_name])
   )
