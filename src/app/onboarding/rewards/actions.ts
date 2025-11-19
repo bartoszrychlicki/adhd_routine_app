@@ -11,19 +11,6 @@ export type RewardsSetupState = {
   message?: string
 }
 
-function parsePoints(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    return null
-  }
-
-  const parsed = Number.parseInt(value, 10)
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new Error("Koszt nagrody musi być dodatnią liczbą punktów.")
-  }
-
-  return parsed
-}
-
 export async function saveRewardsSetupAction(
   _prevState: RewardsSetupState,
   formData: FormData
@@ -119,13 +106,39 @@ export async function saveRewardsSetupAction(
       }
     }
 
+    // Custom reward validation
     const customName = formData.get("customName")
+    const customPointsRaw = formData.get("customPoints")
     const customDescription = formData.get("customDescription")
-    const customPoints = parsePoints(formData.get("customPoints"))
     const isRepeatable = formData.get("customRepeatable") === "true"
 
-    if (typeof customName === "string" && customName.trim().length > 0 && customPoints) {
-      const trimmedName = customName.trim()
+    const hasCustomName = typeof customName === "string" && customName.trim().length > 0
+    const hasCustomPoints = typeof customPointsRaw === "string" && customPointsRaw.trim().length > 0
+
+    if (hasCustomName || hasCustomPoints) {
+      if (!hasCustomName) {
+        return {
+          status: "error",
+          message: "Podaj nazwę dla własnej nagrody lub usuń koszt punktowy.",
+        }
+      }
+
+      if (!hasCustomPoints) {
+        return {
+          status: "error",
+          message: "Podaj koszt punktowy dla własnej nagrody.",
+        }
+      }
+
+      const customPoints = Number.parseInt(customPointsRaw as string, 10)
+      if (!Number.isFinite(customPoints) || customPoints <= 0) {
+        return {
+          status: "error",
+          message: "Koszt nagrody musi być dodatnią liczbą punktów.",
+        }
+      }
+
+      const trimmedName = (customName as string).trim()
       const { error: insertCustomError } = await serviceClient.from("rewards").insert({
         family_id: familyId,
         name: trimmedName,
