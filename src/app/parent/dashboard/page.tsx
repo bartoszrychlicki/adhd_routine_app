@@ -52,7 +52,7 @@ ProfileRow,
 "id" | "display_name" | "role" | "deleted_at"
 >
 type RewardRedemptionRow = Database["public"]["Tables"]["reward_redemptions"]["Row"] & {
-  reward: { name: string } | null
+  reward: { name: string | null } | null
   child: { display_name: string } | null
 }
 
@@ -325,18 +325,21 @@ async function loadRewardEntries(
   const { data, error } = await supabase
     .from("reward_redemptions")
     .select(
-      "id, points_cost, status, requested_at, reward:rewards(name), child:profiles!reward_redemptions_child_profile_id_fkey(display_name)"
+      `id, points_cost, status, requested_at,
+      reward:rewards(name),
+      child:profiles!reward_redemptions_child_profile_id_fkey(display_name)`
     )
     .in("child_profile_id", childProfileIds)
     .order("requested_at", { ascending: false })
     .limit(5)
+    .returns<RewardRedemptionRow[]>()
 
   if (error) {
     console.error("[parent-dashboard] failed to load rewards log", error)
     return []
   }
 
-  return (data as RewardRedemptionRow[]).map((entry) => ({
+  return (data ?? []).map((entry) => ({
     id: entry.id,
     rewardName: entry.reward?.name ?? "Nagroda",
     childName: entry.child?.display_name ?? "Dziecko",
