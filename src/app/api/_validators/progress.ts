@@ -1,5 +1,6 @@
 import { parseBoolean, parseNumber } from "../_lib/validation"
 import { parseIsoDate, assertDateRange } from "../_lib/dates"
+import { ValidationError } from "../_lib/errors"
 
 export type FamilyProgressQuery = {
   date: string
@@ -9,8 +10,10 @@ export type FamilyProgressQuery = {
 export function parseFamilyProgressQuery(
   searchParams: URLSearchParams
 ): FamilyProgressQuery {
-  const date = parseIsoDate(searchParams.get("date"), "date") ??
-    new Date().toISOString().slice(0, 10)
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const date = parseIsoDate(searchParams.get("date"), "date") ?? todayIso
+
+  assertDailyProgressDateWindow(date, todayIso)
 
   const includeHistory = parseBoolean(
     searchParams.get("includeHistory"),
@@ -51,5 +54,24 @@ export function parseFamilyProgressHistoryQuery(
     pageSize,
     fromDate,
     toDate
+  }
+}
+
+function assertDailyProgressDateWindow(date: string, todayIso: string) {
+  const today = new Date(`${todayIso}T00:00:00Z`)
+  const selected = new Date(`${date}T00:00:00Z`)
+
+  if (selected.getTime() > today.getTime()) {
+    throw new ValidationError("Date cannot be in the future", { field: "date" })
+  }
+
+  const earliest = new Date(today)
+  earliest.setUTCDate(earliest.getUTCDate() - 30)
+
+  if (selected.getTime() < earliest.getTime()) {
+    throw new ValidationError("Date cannot be older than 30 days", {
+      field: "date",
+      maxDays: 30
+    })
   }
 }

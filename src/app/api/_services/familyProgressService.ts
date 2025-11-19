@@ -73,7 +73,7 @@ async function fetchTasksForSessions(
 
   const { data: completionRows, error: completionError } = await client
     .from("task_completions")
-    .select("routine_session_id, routine_task_id, completed_at, deleted_at")
+    .select("routine_session_id, routine_task_id, completed_at")
     .in("routine_session_id", sessionIds)
 
   if (completionError) {
@@ -82,9 +82,6 @@ async function fetchTasksForSessions(
 
   const completionsBySession = new Map<string, Map<string, string | null>>()
   completionRows.forEach((row) => {
-    if (row.deleted_at) {
-      return
-    }
     if (!completionsBySession.has(row.routine_session_id)) {
       completionsBySession.set(row.routine_session_id, new Map())
     }
