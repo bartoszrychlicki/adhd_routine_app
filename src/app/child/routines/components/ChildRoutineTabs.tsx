@@ -362,7 +362,10 @@ export function ChildRoutineTabs({ tabs, childId, familyId, onSelectTab }: Child
   return (
     <div data-testid="child-routine-tabs" className="flex flex-col gap-6">
       <Tabs value={selectedId} onValueChange={handleTabChange}>
-        <TabsList aria-label="Wybierz rutynę" className="flex-wrap gap-2 bg-slate-950/40">
+        <TabsList
+          aria-label="Wybierz rutynę"
+          className="flex-wrap gap-2 bg-slate-950/40 sm:justify-start sm:gap-2"
+        >
           {tabs.map((tab) => {
             const meta = sessionMeta[tab.id] ?? {
               status: tab.sessionStatus,
@@ -454,9 +457,11 @@ export function ChildRoutineTabs({ tabs, childId, familyId, onSelectTab }: Child
               <div className="flex flex-col gap-6">
                 {tab.status === "active" ? (
                   <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <SessionTimer startedAt={meta.startedAt ?? undefined} plannedEndAt={meta.plannedEndAt ?? undefined} />
-                      <div className="flex flex-col gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs text-emerald-100">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                      <div className="w-full sm:w-auto">
+                        <SessionTimer startedAt={meta.startedAt ?? undefined} plannedEndAt={meta.plannedEndAt ?? undefined} />
+                      </div>
+                      <div className="flex w-full flex-col gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs text-emerald-100 sm:w-auto">
                         <span className="text-sm font-semibold text-white">Rekord: {bestDurationLabel}</span>
                         {routineIsCompleted && tab.bestTimeBeaten ? (
                           <span>Ostatnia misja pobiła rekord czasu!</span>
@@ -504,7 +509,7 @@ export function ChildRoutineTabs({ tabs, childId, familyId, onSelectTab }: Child
                 )}
 
                 <section aria-labelledby={`routine-${tab.id}-tasks`} className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <h3 id={`routine-${tab.id}-tasks`} className="text-lg font-semibold text-white">
                       Zadania
                     </h3>
@@ -532,7 +537,7 @@ export function ChildRoutineTabs({ tabs, childId, familyId, onSelectTab }: Child
                             data-status={isCompleted ? "completed" : "pending"}
                             data-inactive={isInactive ? "true" : undefined}
                             className={cn(
-                              "flex items-center justify-between gap-4 rounded-2xl border border-slate-800/70 bg-slate-900/50 px-4 py-3 transition",
+                              "flex flex-col gap-4 rounded-2xl border border-slate-800/70 bg-slate-900/50 px-4 py-3 transition sm:flex-row sm:items-center sm:justify-between",
                               isInactive && "pointer-events-none opacity-60",
                               isCompleted && "border-emerald-500/50 bg-emerald-500/10",
                               !isInactive && isActiveTask && "border-teal-400/60 bg-teal-500/10"
@@ -556,7 +561,7 @@ export function ChildRoutineTabs({ tabs, childId, familyId, onSelectTab }: Child
                                 size="sm"
                                 variant={isCompleted ? "secondary" : "outline"}
                                 className={cn(
-                                  "rounded-full px-4",
+                                  "w-full rounded-full px-4 sm:w-auto",
                                   isCompleted
                                     ? "border-emerald-500/40 bg-emerald-500/20 text-emerald-100"
                                     : "border-teal-400/40 bg-teal-500/10 text-teal-100"
