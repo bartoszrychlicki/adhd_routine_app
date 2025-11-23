@@ -12,6 +12,26 @@ export const metadata: Metadata = {
   description: "Zarządzaj rutynami i zadaniami dla swoich dzieci.",
 }
 
+type RoutineTaskRow = {
+  id: string
+  name: string
+  points: number
+  position: number | null
+  is_optional: boolean
+  is_active: boolean
+}
+
+type RoutineRow = {
+  id: string
+  name: string
+  routine_type: string
+  start_time: string | null
+  end_time: string | null
+  auto_close_after_minutes: number | null
+  is_active: boolean
+  routine_tasks: RoutineTaskRow[] | null
+}
+
 export default async function ParentRoutinesPage() {
   const activeProfile = await getActiveProfile()
 
@@ -41,14 +61,14 @@ export default async function ParentRoutinesPage() {
   }
 
   // Sort tasks by position and deduplicate by name (to show unified view)
-  const routines = (data ?? []).map((routine) => {
-    const uniqueTasks = new Map<string, any>()
-
-      ; (routine.routine_tasks ?? []).forEach((task) => {
-        if (!uniqueTasks.has(task.name)) {
-          uniqueTasks.set(task.name, task)
-        }
-      })
+  const routinesData: RoutineRow[] = (data ?? []) as RoutineRow[]
+  const routines = routinesData.map((routine) => {
+    const uniqueTasks = new Map<string, RoutineTaskRow>()
+    ;(routine.routine_tasks ?? []).forEach((task) => {
+      if (!uniqueTasks.has(task.name)) {
+        uniqueTasks.set(task.name, task)
+      }
+    })
 
     const tasks = Array.from(uniqueTasks.values())
       .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))

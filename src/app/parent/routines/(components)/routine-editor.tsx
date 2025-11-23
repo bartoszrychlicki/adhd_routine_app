@@ -19,7 +19,13 @@ import { useState, useTransition, useActionState, useEffect, useRef } from "reac
 import { Plus } from "lucide-react"
 
 import { TaskItem } from "./task-item"
-import { reorderTasksAction, updateTaskAction, createTaskAction, deleteTaskAction } from "../actions"
+import {
+    reorderTasksAction,
+    updateTaskAction,
+    createTaskAction,
+    deleteTaskAction,
+    type RoutineTaskUpdateState,
+} from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -56,7 +62,7 @@ const ROUTINE_TYPE_LABEL: Record<string, string> = {
 
 export function RoutineEditor({ routine, tasks: initialTasks }: RoutineEditorProps) {
     const [tasks, setTasks] = useState(initialTasks)
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
 
     // Sync local state with props when server revalidates
     useEffect(() => {
@@ -186,7 +192,10 @@ export function RoutineEditor({ routine, tasks: initialTasks }: RoutineEditorPro
 }
 
 function CreateTaskForm({ routineId }: { routineId: string }) {
-    const [state, formAction] = (useActionState as any)(createTaskAction, { status: "idle" })
+    const [state, formAction] = useActionState<RoutineTaskUpdateState, FormData>(
+        createTaskAction,
+        { status: "idle" }
+    )
     const formRef = useRef<HTMLFormElement>(null)
     const [points, setPoints] = useState(10)
 

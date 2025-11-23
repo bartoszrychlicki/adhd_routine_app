@@ -199,7 +199,11 @@ export async function updateTaskAction(
       return { status: "error", message: "Nie znaleziono zadania." }
     }
 
-    const updates: Record<string, any> = {
+    const updates: {
+      name?: string
+      points?: number
+      is_optional: boolean
+    } = {
       is_optional: isOptional,
     }
 
