@@ -215,11 +215,11 @@ async function ensureRoutineSessionsForAssignments(
   }
 
   const routinesWithUpcomingSession = new Set<string>()
-  ;(existingSessions ?? []).forEach((row) => {
-    if (routineMap.has(row.routine_id)) {
-      routinesWithUpcomingSession.add(row.routine_id)
-    }
-  })
+    ; (existingSessions ?? []).forEach((row) => {
+      if (routineMap.has(row.routine_id)) {
+        routinesWithUpcomingSession.add(row.routine_id)
+      }
+    })
 
   const missingRoutineIds = routineIds.filter((id) => !routinesWithUpcomingSession.has(id))
 
@@ -361,51 +361,51 @@ export async function fetchChildRoutineBoard(
     "skipped",
   ])
 
-  ;(sessionData ?? [])
-    .filter((session) => routineMap.has(session.routine_id))
-    .sort((a, b) => {
-      const byDate = a.session_date.localeCompare(b.session_date)
-      if (byDate !== 0) return byDate
-      return (a.created_at ?? "").localeCompare(b.created_at ?? "")
-    })
-    .forEach((session) => {
-      const routine = routineMap.get(session.routine_id)
-      if (!routine) return
+    ; (sessionData ?? [])
+      .filter((session) => routineMap.has(session.routine_id))
+      .sort((a, b) => {
+        const byDate = a.session_date.localeCompare(b.session_date)
+        if (byDate !== 0) return byDate
+        return (a.created_at ?? "").localeCompare(b.created_at ?? "")
+      })
+      .forEach((session) => {
+        const routine = routineMap.get(session.routine_id)
+        if (!routine) return
 
-      const startAt = combineDateAndTime(session.session_date, routine.start_time) ?? session.started_at
-      const endAt = combineDateAndTime(session.session_date, routine.end_time) ?? session.planned_end_at ?? null
-      const basePoints = taskTotals.get(session.routine_id) ?? 0
-      const preview: ChildRoutinePreview = {
-        sessionId: session.id,
-        routineId: session.routine_id,
-        name: routine.name ?? "Rutyna",
-        status: "today",
-        startAt,
-        endAt,
-        pointsAvailable:
-          session.status === "completed" && typeof session.points_awarded === "number" && session.points_awarded > 0
-            ? session.points_awarded
-            : basePoints,
-      }
+        const startAt = combineDateAndTime(session.session_date, routine.start_time) ?? session.started_at
+        const endAt = combineDateAndTime(session.session_date, routine.end_time) ?? session.planned_end_at ?? null
+        const basePoints = taskTotals.get(session.routine_id) ?? 0
+        const preview: ChildRoutinePreview = {
+          sessionId: session.id,
+          routineId: session.routine_id,
+          name: routine.name ?? "Rutyna",
+          status: "today",
+          startAt,
+          endAt,
+          pointsAvailable:
+            session.status === "completed" && typeof session.points_awarded === "number" && session.points_awarded > 0
+              ? session.points_awarded
+              : basePoints,
+        }
 
-      if (session.session_date === todayDate) {
-        if (completedStatuses.has(session.status)) {
-          preview.status = "completed"
-          board.completed.push(preview)
-        } else if (activeStatuses.has(session.status)) {
-          preview.status = "today"
-          board.today.push(preview)
+        if (session.session_date === todayDate) {
+          if (completedStatuses.has(session.status)) {
+            preview.status = "completed"
+            board.completed.push(preview)
+          } else if (activeStatuses.has(session.status)) {
+            preview.status = "today"
+            board.today.push(preview)
+          }
+        } else if (session.session_date > todayDate) {
+          if (completedStatuses.has(session.status)) {
+            preview.status = "completed"
+            board.completed.push(preview)
+          } else {
+            preview.status = "upcoming"
+            board.upcoming.push(preview)
+          }
         }
-      } else if (session.session_date > todayDate) {
-        if (completedStatuses.has(session.status)) {
-          preview.status = "completed"
-          board.completed.push(preview)
-        } else {
-          preview.status = "upcoming"
-          board.upcoming.push(preview)
-        }
-      }
-    })
+      })
 
   board.today.sort(sortByStartTime)
   board.upcoming.sort(sortByStartTime)
@@ -549,7 +549,16 @@ export async function fetchChildRoutineSessionViewModelForChild(
     }
   })
 
-  const totalPoints = steps.reduce((sum, task) => sum + task.points, 0)
+  // Deduplicate steps by ID to prevent UI issues
+  const uniqueStepsMap = new Map<string, ChildRoutineTask>()
+  steps.forEach((step) => {
+    if (!uniqueStepsMap.has(step.id)) {
+      uniqueStepsMap.set(step.id, step)
+    }
+  })
+  const uniqueSteps = Array.from(uniqueStepsMap.values())
+
+  const totalPoints = uniqueSteps.reduce((sum, task) => sum + task.points, 0)
 
   return {
     id: sessionRow.id,
@@ -566,7 +575,7 @@ export async function fetchChildRoutineSessionViewModelForChild(
     bestTimeBeaten: sessionRow.best_time_beaten ?? false,
     totalPoints,
     pointsAwarded: sessionRow.points_awarded ?? 0,
-    steps,
+    steps: uniqueSteps,
   }
 }
 
